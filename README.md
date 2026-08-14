@@ -8,6 +8,7 @@ From 8/14 testing:
 - add stop watch / track time for the whole game
 - add track time for each person
 - victory/lose end screen with stats: time per person, # card taken from others, # cards taken from themself, MVP, Ace, track sets they were part of
+- ui: maintain arrow so it stays until the next turn, easier to remember
 - Emoting
 - Chatbox
 - Betting on final score, person who gets most snipes, person who gets stolen from the most
