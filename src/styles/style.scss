@@ -128,6 +128,40 @@ $rot: 90;
   }
 }
 
+input[type="text"] {
+  background: var(--gray-0);
+  border: 1px solid var(--gray-300);
+  border-radius: 0.4rem;
+  font: inherit;
+  height: 1.6rem;
+  padding: 0.15rem 0.5rem;
+}
+
+.nameEntry {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  justify-content: center;
+  min-height: 60vh;
+
+  form {
+    align-items: center;
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+.renameForm {
+  align-items: center;
+  display: flex;
+  gap: 0.3rem;
+
+  input {
+    width: 8rem;
+  }
+}
+
 .roomList {
   background: var(--gray-0);
   border-radius: 0.6rem;

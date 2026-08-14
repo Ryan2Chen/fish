@@ -27,7 +27,8 @@ export namespace Room {
 
   export type State = {
     client?: Client | null;
-    name?: string;
+    name?: string | null;
+    nameInput?: string;
     room?: string;
     sidebar?: "closed" | "info" | "log";
   };
@@ -39,40 +40,72 @@ class Room extends React.Component<Room.Props, Room.State> {
 
     this.state = {
       client: null,
-      name: this.getName(),
+      name: window.localStorage.getItem(this.storageKey("name")),
+      nameInput: "",
       room: this.props.match.params.room,
       sidebar: "closed",
     };
   }
 
+  // "?as=2" namespaces localStorage so a handful of ordinary tabs in the
+  // same browser can each be a distinct test player -- real links (no "as"
+  // param) are untouched and keep the normal persistent identity
+  storageKey(key: "name" | "token"): string {
+    const as = new URLSearchParams(this.props.location.search).get("as");
+    return as ? `${key}:${as}` : key;
+  }
+
   componentDidMount() {
-    const { client: client_, name, room } = this.state;
+    if (this.state.name !== null) this.startClient(this.state.name);
+  }
+
+  startClient(name: string) {
+    const { client: client_, room } = this.state;
     if (client_ !== null) return;
 
     const token = this.getToken();
     const client = new Client(this.props.url, room as RoomID, name, token);
     client.onUpdate = (client: Client) => this.setState({ client });
     client.connect();
-    this.setState({ client });
+    this.setState({ client, name });
   }
 
-  getName() {
-    const name =
-      window.localStorage.getItem("name") ??
-      (window.prompt("enter your name") || "no name");
-    window.localStorage.setItem("name", name.slice(0, 16));
-    return name;
+  submitName(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const name = (this.state.nameInput || "no name").slice(0, 16);
+    window.localStorage.setItem(this.storageKey("name"), name);
+    this.startClient(name);
   }
 
   // persistent per-browser identity, so a reload/reconnect can reclaim
   // the same seat instead of looking like a brand new player
   getToken(): UserID {
-    let token = window.localStorage.getItem("token");
+    const key = this.storageKey("token");
+    let token = window.localStorage.getItem(key);
     if (!token) {
       token = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-      window.localStorage.setItem("token", token);
+      window.localStorage.setItem(key, token);
     }
     return token as UserID;
+  }
+
+  renderNameEntry() {
+    return (
+      <div className="nameEntry">
+        <p>enter your name</p>
+        <form onSubmit={(e) => this.submitName(e)}>
+          <input
+            autoFocus
+            maxLength={16}
+            onChange={(e) => this.setState({ nameInput: e.target.value })}
+            type="text"
+            value={this.state.nameInput}
+          />
+          <button type="submit">go!</button>
+        </form>
+      </div>
+    );
   }
 
   renderDeclare() {
@@ -130,7 +163,11 @@ class Room extends React.Component<Room.Props, Room.State> {
   }
 
   render() {
-    const { client } = this.state;
+    const { client, name } = this.state;
+
+    if (name === null) {
+      return <div className="game">{this.renderNameEntry()}</div>;
+    }
 
     if (!client) {
       return <div className="game">loading...</div>;

@@ -13,15 +13,51 @@ export namespace Info {
     client: Client;
     lone: boolean;
   };
+
+  export type State = {
+    nameInput: string;
+    renaming: boolean;
+  };
 }
 
-export class Info extends React.Component<Info.Props> {
-  rename(): void {
-    const { client } = this.props;
+export class Info extends React.Component<Info.Props, Info.State> {
+  constructor(props) {
+    super(props);
 
-    const name = window.prompt("enter your name") || "no name";
+    this.state = {
+      nameInput: "",
+      renaming: false,
+    };
+  }
+
+  submitRename(e): void {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const { client } = this.props;
+    const name = (this.state.nameInput || "no name").slice(0, 16);
     window.localStorage.setItem("name", name);
     client.attemptRename(name);
+    this.setState({ renaming: false });
+  }
+
+  startRename(currentName: string): void {
+    this.setState({ renaming: true, nameInput: currentName });
+  }
+
+  renderRenameForm() {
+    return (
+      <form className="renameForm" onSubmit={(e) => this.submitRename(e)}>
+        <input
+          autoFocus
+          maxLength={16}
+          onChange={(e) => this.setState({ nameInput: e.target.value })}
+          type="text"
+          value={this.state.nameInput}
+        />
+        <button type="submit">save</button>
+      </form>
+    );
   }
 
   renderAvatarPicker() {
@@ -98,9 +134,10 @@ export class Info extends React.Component<Info.Props> {
           {host ? <span className="adminBadge">★</span> : null}
           {user.name}
         </span>
-        {isSelf ? (
-          <button onClick={(e) => this.rename()}>rename</button>
+        {isSelf && !this.state.renaming ? (
+          <button onClick={(e) => this.startRename(user.name)}>rename</button>
         ) : null}
+        {isSelf && this.state.renaming ? this.renderRenameForm() : null}
         {isSelf ? this.renderAvatarPicker() : null}
       </li>
     );
