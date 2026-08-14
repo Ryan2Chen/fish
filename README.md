@@ -7,7 +7,7 @@ web app for playing the card game [canadian fish, also known as literature](http
 From 8/14 testing:
 - add stop watch / track time for the whole game
 - add track time for each person
-- end screen of stats: time per person, # card taken from others, # cards taken from themself, MVP, Ace, track sets they were part of
+- victory/lose end screen with stats: time per person, # card taken from others, # cards taken from themself, MVP, Ace, track sets they were part of
 - Emoting
 - Chatbox
 - Betting on final score, person who gets most snipes, person who gets stolen from the most
