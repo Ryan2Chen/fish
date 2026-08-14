@@ -5,6 +5,9 @@ import { CFish as C, Data, Engine, SeatID } from "lib/cfish";
 import { Protocol as P } from "lib/protocol";
 import { RoomID, UserID } from "lib/server";
 
+// how long an answer's resolution stays suspenseful before it's revealed
+const ANSWER_REVEAL_MS = 1800;
+
 export class Client {
   engine: Engine | null = null;
   identity: P.User | null = null;
@@ -25,6 +28,10 @@ export class Client {
   // true while the spin-wheel reveal is playing, so the rest of the UI can
   // hide "whose turn" spoilers (active highlight, turn banner) until it lands
   revealingFirstAsker: boolean = false;
+  // set while an answer's outcome is being held back for suspense; holds
+  // the frozen "asked" line to show in place of whatever comes next
+  pendingReveal: string | null = null;
+  pendingRevealTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     readonly url: string,
@@ -217,24 +224,45 @@ export class Client {
           `${sfy("asker")} asked ${sfy("askee")} for the ${sfy("askedCard")}`
         );
         break;
-      case "answer":
-        this.engine.answer(event.askee, event.response);
-        this.log.push(
-          event.response
-            ? `${sfy("askee")} gave ${sfy("asker")} the ${sfy("askedCard")}`
-            : `${sfy("askee")} did not have the ${sfy("askedCard")}`
-        );
-        if (event.response) {
-          const { asker, askee, askedCard } = this.engine;
-          this.cardAnimHook?.(
-            asker,
-            askee,
-            new Card(askedCard.cardSuit, askedCard.rank)
-          );
-        } else {
-          this.resetShakeAnimHook?.();
+      case "answer": {
+        // freeze today's "asked" line through the pause so the reveal
+        // isn't spoiled by the engine (already updated below) moving on
+        const askerName = sfy("asker");
+        const askeeName = sfy("askee");
+        const cardName = sfy("askedCard");
+        const response = event.response;
+        this.pendingReveal = `${askerName} asked ${askeeName} for the ${cardName}`;
+        // a back-to-back ask/answer could otherwise land while a previous
+        // reveal's timer is still pending, letting it fire late and clobber
+        // this one -- clear it first, matching the same fix in SpinWheel
+        if (this.pendingRevealTimer !== null) {
+          clearTimeout(this.pendingRevealTimer);
         }
+
+        this.engine.answer(event.askee, response);
+
+        this.pendingRevealTimer = setTimeout(() => {
+          this.pendingRevealTimer = null;
+          this.pendingReveal = null;
+          this.log.push(
+            response
+              ? `${askeeName} gave ${askerName} the ${cardName}`
+              : `${askeeName} did not have the ${cardName}`
+          );
+          if (response) {
+            const { asker, askee, askedCard } = this.engine;
+            this.cardAnimHook?.(
+              asker,
+              askee,
+              new Card(askedCard.cardSuit, askedCard.rank)
+            );
+          } else {
+            this.resetShakeAnimHook?.();
+          }
+          this.onUpdate?.(this);
+        }, ANSWER_REVEAL_MS);
         break;
+      }
       case "initDeclare":
         this.engine.initDeclare(event.declarer, event.declaredSuit);
         this.log.push(
@@ -265,7 +293,9 @@ export class Client {
             ? `${sfy("declarer")} correctly declared ${sfy("declaredSuit")}`
             : `${sfy("declarer")} incorrectly declared ${sfy("declaredSuit")}`
         );
-        if (this.engine.winner !== null) {
+        // a team can clinch the majority before every suit is declared;
+        // only announce once the game has actually ended
+        if (this.engine.allSuitsDeclared) {
           this.log.push(
             `team ${this.engine.seats
               .filter((seat) => this.engine.teamOf(seat) === this.engine.winner)

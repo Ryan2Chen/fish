@@ -85,9 +85,15 @@ export class Action extends React.Component<Action.Props, Action.State> {
       return res.length > 12 ? res.slice(0, 10).concat("...") : res;
     };
 
-    if (engine.winner !== null && client.log.length > 0) {
-      return client.log[client.log.length - 1];
+    if (client.pendingReveal !== null) {
+      return client.pendingReveal;
     } else if (engine.phase === C.Phase.WAIT) {
+      // a team can clinch the majority before every suit is declared, so
+      // play (and the log) keeps going; only freeze on it once the game
+      // has actually ended (phase is WAIT), not the moment it's decided
+      if (engine.winner !== null && client.log.length > 0) {
+        return client.log[client.log.length - 1];
+      }
       if (engine.numSeated < engine.rules.numPlayers) {
         return "waiting for all players to be seated";
       }

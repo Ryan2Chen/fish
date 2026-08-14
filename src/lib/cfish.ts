@@ -193,11 +193,18 @@ export class Engine extends Data {
     return res;
   }
 
+  // a team can clinch a mathematical majority before every suit is
+  // declared; the game itself keeps going regardless, so a 9-0 sweep
+  // stays possible and chip payouts reflect the true final margin
   get winner(): CFish.Team | null {
     const bound = Card.FISH_SUITS.length / 2;
     if (this.scoreOf(CFish.Team.FIRST) > bound) return CFish.Team.FIRST;
     if (this.scoreOf(CFish.Team.SECOND) > bound) return CFish.Team.SECOND;
     return null;
+  }
+
+  get allSuitsDeclared(): boolean {
+    return Object.keys(this.declarerOf).length === Card.FISH_SUITS.length;
   }
 
   indexOf(seat: SeatID): number {
@@ -544,7 +551,7 @@ export class Engine extends Data {
       this.handSize[this.ownSeat] = this.ownHand.size;
     }
 
-    if (this.winner !== null) {
+    if (this.allSuitsDeclared) {
       this.phase = CFish.Phase.WAIT;
       this.settleChips(this.winner);
     } else if (this.handSize[this.asker] === 0) {

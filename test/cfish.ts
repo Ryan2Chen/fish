@@ -249,6 +249,55 @@ describe("Engine declare bonus / choose phase", () => {
   });
 });
 
+describe("Engine plays past a clinched majority", () => {
+  let engine;
+
+  beforeEach(() => {
+    engine = new Engine(CFish.defaultRules);
+    ["a", "b", "c", "d", "e", "f"].forEach((user, seat) => {
+      engine.addUser(user);
+      engine.seatAt(user, seat);
+    });
+    engine.startGame("a", false);
+    engine.asker = 0;
+  });
+
+  // declares owners that don't match reality, so it's always a *wrong*
+  // declare -- which awards the point to the opposing team, not owner's
+  const trashDeclare = (declarer, suit, owner) => {
+    engine.initDeclare(declarer, suit);
+    const owners = {};
+    for (const card of genFishSuit(suit)) {
+      owners[String(card)] = owner;
+    }
+    engine.declare(declarer, owners);
+  };
+
+  it("keeps going after a team clinches 5, only ending once all 9 are declared", () => {
+    // seat 1 (team SECOND) wrongly declares 5 suits in a row; each wrong
+    // declare awards the point to team FIRST, the opposing team
+    trashDeclare(1, FishSuit.HIGH_CLUBS, 1);
+    trashDeclare(1, FishSuit.LOW_CLUBS, 1);
+    trashDeclare(1, FishSuit.LOW_DIAMONDS, 1);
+    trashDeclare(1, FishSuit.HIGH_DIAMONDS, 1);
+    trashDeclare(1, FishSuit.LOW_SPADES, 1);
+
+    engine.scoreOf(CFish.Team.FIRST).should.equal(5);
+    engine.winner.should.equal(CFish.Team.FIRST); // clinched...
+    engine.phase.should.not.equal(CFish.Phase.WAIT); // ...but still playing
+    engine.allSuitsDeclared.should.equal(false);
+
+    trashDeclare(1, FishSuit.HIGH_SPADES, 1);
+    trashDeclare(1, FishSuit.LOW_HEARTS, 1);
+    trashDeclare(1, FishSuit.HIGH_HEARTS, 1);
+    trashDeclare(1, FishSuit.EIGHTS, 1);
+
+    engine.allSuitsDeclared.should.equal(true);
+    engine.phase.should.equal(CFish.Phase.WAIT);
+    engine.scoreOf(CFish.Team.FIRST).should.equal(9);
+  });
+});
+
 describe("Engine chip settlement", () => {
   let engine;
 
