@@ -181,7 +181,7 @@ export class Players extends React.Component<Players.Props, Players.State> {
             onAnimationEnd={(e) => this.setState({ animDone: true })}
           >
             <PlayerInt
-              active={engine.activeSeat === seat}
+              active={!client.revealingFirstAsker && engine.activeSeat === seat}
               askBtn={this.renderAskBtn(seat)}
               avatarId={client.findUser(seat)?.avatar}
               cardSelector={(update) => this.renderCardSelector(seat, update)}

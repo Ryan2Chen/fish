@@ -57,7 +57,11 @@ export class Action extends React.Component<Action.Props, Action.State> {
     const { client } = this.props;
     const { engine } = client;
 
-    if (engine.ownSeat === null || engine.activeSeat !== engine.ownSeat)
+    if (
+      client.revealingFirstAsker ||
+      engine.ownSeat === null ||
+      engine.activeSeat !== engine.ownSeat
+    )
       return null;
 
     const label = {

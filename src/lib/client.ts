@@ -22,6 +22,9 @@ export class Client {
   onUpdate: ((state: this) => void) | null = null;
   resetShakeAnimHook: (() => void) | null = null;
   startGameHook: ((asker: SeatID) => void) | null = null;
+  // true while the spin-wheel reveal is playing, so the rest of the UI can
+  // hide "whose turn" spoilers (active highlight, turn banner) until it lands
+  revealingFirstAsker: boolean = false;
 
   constructor(
     readonly url: string,
@@ -203,6 +206,7 @@ export class Client {
         // the broadcast (hand: null) and our own targeted copy (real hand)
         // both arrive; fire the spin animation once, off the personal one
         if (event.hand !== null) {
+          this.revealingFirstAsker = true;
           this.startGameHook?.(event.asker);
         }
         break;

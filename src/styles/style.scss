@@ -574,25 +574,30 @@ $rotj: 90;
 }
 
 .spinWheel {
-  height: 8rem;
+  height: 10rem;
   left: 50%;
   pointer-events: none;
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 8rem;
+  width: 10rem;
   z-index: 6;
 }
 
 .wheelPointer {
-  border-left: 0.5rem solid transparent;
-  border-right: 0.5rem solid transparent;
-  border-top: 0.7rem solid var(--navy);
+  border-left: 0.6rem solid transparent;
+  border-right: 0.6rem solid transparent;
+  border-top: 0.9rem solid var(--navy);
   left: 50%;
   position: absolute;
-  top: -0.3rem;
+  top: -0.4rem;
+  transition: transform 0.15s ease;
   transform: translateX(-50%);
   z-index: 1;
+
+  .landed & {
+    transform: translateX(-50%) translateY(0.15rem);
+  }
 }
 
 .wheelDial {
@@ -605,6 +610,7 @@ $rotj: 90;
 .wheelSlice {
   stroke: var(--gray-0);
   stroke-width: 2;
+  transition: filter 0.2s ease;
 
   &.team-0 {
     fill: var(--team-first);
@@ -615,12 +621,34 @@ $rotj: 90;
   }
 }
 
+.wheelWinner .wheelSlice {
+  filter: drop-shadow(0 0 8px var(--accent));
+  stroke: var(--accent);
+  stroke-width: 4;
+}
+
 .wheelLabel {
   fill: var(--gray-0);
   font-family: "Baloo 2", sans-serif;
   font-size: 9px;
   font-weight: 700;
   text-anchor: middle;
+}
+
+.wheelReveal {
+  animation: pulse 0.6s ease-in-out infinite;
+  background: var(--accent);
+  border-radius: 0.6rem;
+  bottom: -2.4rem;
+  color: var(--gray-0);
+  font-family: "Baloo 2", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  left: 50%;
+  padding: 0.3rem 0.6rem;
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
 }
 
 .cardAnim {
