@@ -1,0 +1,823 @@
+@use "sass:math";
+// body font
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap");
+// friendly rounded display font, for buttons/headings/big numbers
+@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&display=swap");
+// suits
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap&text=%E2%99%A3%E2%99%A6%E2%99%A5%E2%99%A0%E2%98%85");
+// ranks (B, R used for jokers)
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap&text=0123456789JQKABR");
+// retro pixel accent font, used sparingly for badges
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+
+html {
+  font-family: "IBM Plex Sans", sans-serif;
+  line-height: 1.2;
+}
+
+body {
+  margin: 0;
+  background: var(--gray-50);
+  color: var(--gray-900);
+  // lo-fi pastel palette (names kept as --gray-* so every existing rule
+  // that references them just picks up the new look for free)
+  --gray-0: #fffaf2; // card / panel background
+  --gray-50: #fff4e8; // page background
+  --gray-100: #ffe6cf; // felt / soft panel fill
+  --gray-200: #ffd3ac; // hover / borders
+  --gray-300: #ffb88c; // button default
+  --gray-400: #f4a3b0; // muted / disabled accent
+  --gray-500: #c98bb0; // secondary text
+  --gray-600: #8a6fa3; // headings, darker text
+  --gray-900: #4a3b5c; // primary text
+  --felt: #c3ecd6; // table felt
+  --accent: #ff8fa3; // primary accent (highlights, active state)
+  --shadow: 0 3px 8px -2px rgba(120, 70, 100, 0.2);
+  --team-first: #6fa3d8; // team 0 accent (dusty blue)
+  --team-second: #ef8a6c; // team 1 accent (warm coral)
+  --navy: #1f2d4a; // Andover badge
+}
+
+button,
+.option,
+.cardFrame .card,
+.declareArea .declareInner,
+.cardSelector,
+.suitSelector,
+.info,
+.log,
+.playerInt.active {
+  border-radius: 0.6rem;
+}
+
+button {
+  background: var(--gray-300);
+  border: none;
+  border-radius: 0.6rem;
+  color: var(--gray-900);
+  font: inherit;
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 500;
+  height: 1.6em;
+  padding: 0.15em 0.6em 0;
+  transition: transform 0.1s ease, background 0.1s ease;
+
+  &:hover {
+    background: var(--accent);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+
+  &:disabled {
+    background: var(--gray-200);
+    color: var(--gray-500);
+
+    &:hover {
+      background: var(--gray-200);
+    }
+
+    &:active {
+      transform: none;
+    }
+  }
+}
+
+$rot: 90;
+@for $i from 0 through 5 {
+  .rot-#{$i} {
+    left: math.percentage(math.div(math.cos($rot * 1deg), 2) + 0.5);
+    top: math.percentage(math.div(math.sin($rot * 1deg), 2) + 0.5);
+  }
+  $rot: $rot + 60;
+}
+
+// global layout
+
+.wrapper {
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.splash {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  input {
+    height: 1.5rem;
+    font: inherit;
+    border: 1px solid var(--gray-500);
+    padding: 0.25rem;
+    margin: 0 0.5rem;
+    background: transparent;
+    width: 8rem;
+  }
+
+  button {
+    height: 2rem;
+    margin: 0.5rem 0;
+  }
+
+  form {
+    align-items: center;
+    display: flex;
+  }
+}
+
+.roomList {
+  background: var(--gray-0);
+  border-radius: 0.6rem;
+  box-shadow: var(--shadow);
+  margin: 0.5rem 0;
+  min-width: 18rem;
+  padding: 0.75rem 1rem;
+
+  p {
+    margin: 0.25rem 0;
+    text-align: center;
+  }
+
+  .empty {
+    color: var(--gray-500);
+  }
+
+  ul {
+    list-style: none;
+    margin: 0.5rem 0 0;
+    padding: 0;
+  }
+
+  li {
+    align-items: center;
+    border-top: 1px solid var(--gray-200);
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.4rem 0;
+
+    &:first-child {
+      border-top: none;
+    }
+  }
+
+  .roomName {
+    flex: 1;
+    font-family: "Baloo 2", sans-serif;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .roomCount {
+    color: var(--gray-500);
+  }
+}
+
+.room {
+  display: grid;
+  grid-template: 1fr 10rem / 15rem 1fr;
+}
+
+.andoverBadge {
+  background: var(--gray-0);
+  border: 2px solid var(--navy);
+  border-radius: 50%;
+  bottom: 0.75rem;
+  box-shadow: var(--shadow);
+  height: 3.5rem;
+  padding: 0.35rem;
+  position: fixed;
+  right: 0.75rem;
+  width: 3.5rem;
+  z-index: 10;
+}
+
+.game {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  grid-column: 2 / 3;
+  grid-row: 1 / 3;
+  width: min-content;
+}
+
+.toggles {
+  display: none;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+
+  p {
+    margin: 0.5rem 0;
+    text-align: center;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0.5rem 0;
+    padding: 0;
+  }
+
+  &.lone {
+    grid-row: 1 / 3;
+  }
+}
+
+.users {
+  button {
+    margin-left: 0.5rem;
+  }
+}
+
+.teams {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template: repeat(5, auto) / 1fr 1fr;
+
+  p {
+    margin: 0;
+  }
+
+  .team {
+    border-top: 0.25rem solid var(--team-color);
+
+    &.team-0 {
+      --team-color: var(--team-first);
+    }
+
+    &.team-1 {
+      --team-color: var(--team-second);
+    }
+
+    li {
+      align-items: center;
+      display: flex;
+      gap: 0.3rem;
+    }
+  }
+
+  .score {
+    color: var(--team-color, var(--gray-600));
+    font-family: "Baloo 2", sans-serif;
+    font-size: 3rem;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .chips {
+    color: var(--gray-500);
+    font-size: 0.75rem;
+  }
+}
+
+.users li {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.avatarPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  margin: 0.3rem 0;
+  width: 100%;
+
+  .avatarOption {
+    background: transparent;
+    height: auto;
+    padding: 0.15rem;
+
+    &:hover {
+      background: var(--gray-200);
+    }
+  }
+}
+
+.adminReset {
+  background: var(--team-second);
+  margin-top: 1rem;
+
+  &:hover {
+    background: var(--accent);
+  }
+}
+
+.log {
+  overflow-y: scroll;
+}
+
+@media screen and (max-width: 750px) {
+  .room {
+    display: flex;
+  }
+
+  .toggles {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    &.active {
+      left: 17rem;
+    }
+  }
+
+  .info,
+  .log {
+    background: var(--gray-0);
+    box-shadow: var(--shadow);
+    bottom: 0;
+    display: none;
+    left: 0;
+    padding: 1rem;
+    position: absolute;
+    top: 0;
+    width: 15rem;
+
+    &.active {
+      display: flex;
+    }
+  }
+}
+
+// table
+
+.table {
+  margin: 2rem 3rem;
+  position: relative;
+}
+
+.players {
+  background-color: var(--felt);
+  border: 0.4rem solid var(--gray-0);
+  border-radius: 50%;
+  box-shadow: var(--shadow);
+  height: 20rem;
+  position: relative;
+  width: 23rem;
+}
+
+.player {
+  position: absolute;
+
+  &.shake {
+    animation: shake 1s;
+  }
+
+  &.team-0 {
+    --team-color: var(--team-first);
+  }
+
+  &.team-1 {
+    --team-color: var(--team-second);
+  }
+}
+
+.playerName {
+  display: inline-block;
+  line-height: 1em;
+  max-width: 10em;
+  overflow-x: clip;
+  text-overflow: ellipsis;
+}
+
+.avatar {
+  vertical-align: middle;
+}
+
+.adminBadge {
+  color: #e0a92e;
+  margin-right: 0.2em;
+}
+
+@keyframes shake {
+  30% {
+    transform: translateX(-1rem);
+  }
+
+  60% {
+    transform: translateX(1rem);
+  }
+
+  80% {
+    transform: translateX(-0.5rem);
+  }
+
+  90% {
+    transform: translateX(0.3rem);
+  }
+
+  100% {
+    transform: translateX(0rem);
+  }
+}
+
+.playerInt {
+  align-items: center;
+  border: 0.15rem solid var(--team-color, transparent);
+  display: flex;
+  flex-direction: column;
+  left: -4.5rem;
+  padding: 0.4rem;
+  position: absolute;
+  top: -2rem;
+  width: 8rem;
+
+  .avatar {
+    flex-shrink: 0;
+  }
+
+  &.active {
+    background: var(--gray-0);
+    filter: drop-shadow(0 0 6px var(--accent));
+  }
+}
+
+.declare {
+  height: 100%;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: 100%;
+
+  button {
+    background: var(--gray-300);
+    left: calc(50% - 2rem);
+    pointer-events: auto;
+    position: absolute;
+    top: calc(50% + 6rem);
+
+    &:disabled {
+      background: var(--gray-200);
+      color: var(--gray-500);
+    }
+
+    &:hover {
+      background: var(--gray-200);
+    }
+  }
+}
+
+.question {
+  height: 70%;
+  left: 20%;
+  padding: 0;
+  position: absolute;
+  top: 15%;
+  width: 60%;
+
+  > div,
+  > div > div {
+    height: 100%;
+    width: 100%;
+    position: relative;
+  }
+
+  .playerTarget {
+    position: absolute;
+
+    // .playerTargetInt {
+    //   background: #aaa;
+    //   height: 1em;
+    //   left: -0.5rem;
+    //   position: relative;
+    //   width: 1rem;
+    //   top: -0.5rem;
+    //   z-index: 2;
+    // }
+  }
+
+  .label {
+    background: var(--gray-100);
+    padding: 0.1rem;
+  }
+}
+
+$roti: 90;
+$rotj: 90;
+@for $i from 0 through 5 {
+  @for $j from 0 through 5 {
+    @keyframes rot-#{$i}-#{$j} {
+      0% {
+        left: math.percentage(math.div(math.cos($roti * 1deg), 2) + 0.5);
+        top: math.percentage(math.div(math.sin($roti * 1deg), 2) + 0.5);
+        opacity: 0%;
+      }
+
+      10% {
+        left: math.percentage(math.div(math.cos($roti * 1deg), 2) + 0.5);
+        top: math.percentage(math.div(math.sin($roti * 1deg), 2) + 0.5);
+        opacity: 100%;
+      }
+
+      60% {
+        left: math.percentage(math.div(math.cos($rotj * 1deg), 2) + 0.5);
+        top: math.percentage(math.div(math.sin($rotj * 1deg), 2) + 0.5);
+        opacity: 100%;
+      }
+
+      90% {
+        opacity: 100%;
+      }
+
+      100% {
+        opacity: 0%;
+      }
+    }
+    $roti: $roti + 60;
+  }
+  $rotj: $rotj + 60;
+}
+
+.cardAnim {
+  height: 60%;
+  left: 25%;
+  padding: 0;
+  position: absolute;
+  top: 20%;
+  width: 50%;
+
+  .cardAnimate {
+    animation-duration: 3s;
+    height: fit-content;
+    position: absolute;
+    width: fit-content;
+  }
+
+  .cardSpan {
+    display: block;
+    background: var(--gray-0);
+    padding: 0.3rem;
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow);
+    left: -50%;
+    position: relative;
+    top: -50%;
+  }
+}
+
+// subtable
+
+.config {
+  display: flex;
+  flex-direction: row;
+
+  &.disabled {
+    pointer-events: none;
+
+    .option {
+      background: transparent;
+    }
+
+    button {
+      background: transparent;
+      color: transparent;
+    }
+  }
+}
+
+.option {
+  align-items: center;
+  background-color: var(--gray-100);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0 0.25rem;
+  padding: 0.5rem;
+  text-align: center;
+
+  .title {
+    margin-bottom: 0.5rem;
+  }
+
+  button {
+    background: var(--gray-300);
+    color: var(--gray-600);
+    width: 100%;
+
+    &:hover {
+      background: var(--gray-50);
+      color: var(--gray-900);
+    }
+
+    &:disabled {
+      background: var(--gray-100);
+      color: var(--gray-900);
+
+      &:hover {
+        background: var(--gray-100);
+      }
+    }
+  }
+}
+
+.action {
+  margin: 2rem 0;
+  text-align: center;
+
+  > div {
+    min-height: 1.5em;
+  }
+
+  button {
+    margin: 0 0.25rem;
+  }
+}
+
+.cardArea {
+  display: flex;
+  left: -1rem;
+  position: relative;
+}
+
+.declareArea {
+  pointer-events: auto;
+  position: absolute;
+
+  .declareInner {
+    background-color: var(--gray-300);
+    display: flex;
+    height: 5rem;
+    position: relative;
+    padding: 0.3rem 2.5rem 0.1rem 0.3rem;
+    left: -50%;
+    min-width: 1.5rem;
+  }
+
+  &.rot-unset {
+    left: 50%;
+    top: 50%;
+  }
+
+  .cardFrame {
+    height: 4rem;
+    width: 1.5rem;
+
+    .card {
+      width: 3rem;
+    }
+  }
+}
+
+.cardFrame {
+  background-color: var(--gray-0);
+  display: block;
+  height: 6rem;
+  position: relative;
+  width: 2rem;
+
+  .card {
+    background-color: var(--gray-0);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow);
+    content: "";
+    display: block;
+    position: absolute;
+    padding: 0.15rem;
+    height: 100%;
+    width: 4rem;
+    top: 0;
+    left: 0;
+  }
+}
+
+.cardFace {
+  display: block;
+  height: 100%;
+  width: 100%;
+
+  text {
+    dominant-baseline: hanging;
+  }
+
+  .corner {
+    font-weight: 700;
+
+    &.rank {
+      font-family: "Inter";
+      font-size: 15px;
+    }
+
+    &.suit {
+      font-family: "Noto Sans JP";
+      font-size: 13px;
+    }
+  }
+
+  .center.suit {
+    dominant-baseline: middle;
+    font-family: "Noto Sans JP";
+    font-size: 34px;
+    opacity: 0.55;
+    text-anchor: middle;
+  }
+}
+
+.popWrap {
+  z-index: 5;
+}
+
+.cardSelector {
+  align-items: center;
+  background-color: var(--gray-200);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 18rem;
+  padding: 0.25rem;
+
+  .row {
+    button {
+      background: var(--gray-0);
+      font-size: 0.85rem;
+      height: 2em;
+      padding: 0.2em 0.5em 0.1em;
+      margin: 0.2em;
+      min-width: 0;
+      width: 3.1em;
+
+      &:hover {
+        background: var(--gray-200);
+      }
+
+      .cardSpan {
+        width: 100%;
+      }
+
+      &:disabled {
+        background: transparent;
+
+        .cardSpan {
+          color: var(--gray-400) !important;
+        }
+
+        &:hover {
+          background: transparent;
+        }
+      }
+    }
+  }
+}
+
+.suitSelector {
+  background-color: var(--gray-200);
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  height: 4rem;
+  padding: 0.25rem;
+  position: relative;
+  top: 0.5rem;
+  width: 24rem;
+  z-index: 2;
+
+  .suitSpan {
+    width: unset;
+  }
+
+  button {
+    background: var(--gray-0);
+    margin: 0.25rem;
+
+    &:hover {
+      background: var(--gray-200);
+    }
+
+    &:disabled {
+      background: transparent;
+
+      .suitSpan {
+        color: var(--gray-400) !important;
+      }
+
+      &:hover {
+        background: transparent;
+      }
+    }
+  }
+}
+
+.cardSpan,
+.suitSpan {
+  display: block;
+  text-align: center;
+
+  .rank {
+    font-size: 1.1em;
+    font-family: "Inter";
+  }
+
+  .suit {
+    font-family: "Noto Sans JP";
+  }
+}
