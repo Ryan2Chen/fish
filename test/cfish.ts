@@ -54,7 +54,7 @@ describe("Engine", () => {
 
   it("runs a basic game", () => {
     engine.startGame("a", false);
-    engine.asker.should.equal(0);
+    engine.asker = 0; // first asker is now random; pin it for this fixed script
 
     engine.ask(1, 0, C.C_2).should.be.instanceOf(CFish.Error);
     engine.ask(0, 1, C.C_2).should.be.instanceOf(CFish.Error);
@@ -141,6 +141,7 @@ describe("Engine", () => {
       handSize: CFish.HandSizeRule.PUBLIC,
     });
     engine.startGame("a", false);
+    engine.asker = 0; // first asker is now random; pin it for this fixed script
     engine.ask(0, 1, C.C_2);
     engine.answer(1, false);
     engine
@@ -170,6 +171,7 @@ describe("Engine declare bonus / choose phase", () => {
       engine.seatAt(user, seat);
     });
     engine.startGame("a", false);
+    engine.asker = 0; // first asker is now random; pin it for this fixed script
 
     // team SECOND fully owns LOW_DIAMONDS, plus a spare card each so their
     // hands aren't emptied once the suit is declared and swept away
@@ -303,6 +305,7 @@ describe("Engine admin reset", () => {
       engine.seatAt(user, seat);
     });
     engine.startGame("a", false);
+    engine.asker = 0; // first asker is now random; pin it for this fixed script
   });
 
   it("rejects reset from a non-host", () => {

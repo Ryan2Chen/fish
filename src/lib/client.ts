@@ -21,6 +21,7 @@ export class Client {
     | null = null;
   onUpdate: ((state: this) => void) | null = null;
   resetShakeAnimHook: (() => void) | null = null;
+  startGameHook: ((asker: SeatID) => void) | null = null;
 
   constructor(
     readonly url: string,
@@ -196,8 +197,14 @@ export class Client {
         this.engine.startGameResponse(
           event.server,
           event.hand,
-          event.handSizes
+          event.handSizes,
+          event.asker
         );
+        // the broadcast (hand: null) and our own targeted copy (real hand)
+        // both arrive; fire the spin animation once, off the personal one
+        if (event.hand !== null) {
+          this.startGameHook?.(event.asker);
+        }
         break;
       case "ask":
         const card = new Card(event.card.cardSuit, event.card.rank);

@@ -244,6 +244,7 @@ export class Room {
           server: null,
           hand: null,
           handSizes: this.engine.redactedHandSize,
+          asker: this.engine.asker,
         });
         for (const seat_ of this.engine.seats) {
           this.toSeat(seat_, {
@@ -251,6 +252,7 @@ export class Room {
             server: null,
             hand: this.engine.handOf[seat_],
             handSizes: this.engine.redactedHandSize,
+            asker: this.engine.asker,
           });
         }
         break;

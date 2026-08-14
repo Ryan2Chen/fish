@@ -11,7 +11,15 @@ describe("Client/Server", () => {
   let clients: Client[] = [],
     server,
     http,
-    url;
+    url,
+    firstAsker: number,
+    askee: number;
+
+  // seats 0-5 each hold exactly one low-clubs card, ranks 2-7 respectively,
+  // in this fixed (unshuffled) deck -- handy since the first asker is now
+  // chosen randomly by the server, so tests can't hardcode "asker: 0"
+  const lowClub = (seat: number) =>
+    [C.C_2, C.C_3, C.C_4, C.C_5, C.C_6, C.C_7][seat];
 
   before((done) => {
     http = createServer();
@@ -99,6 +107,8 @@ describe("Client/Server", () => {
       if (event.type !== "startGameResponse") return;
       count1 += 1;
       if (count1 !== 2) return;
+      firstAsker = clients[0].engine.asker;
+      askee = (firstAsker + 1) % 6; // always the opposing team
       done();
     });
 
@@ -119,11 +129,11 @@ describe("Client/Server", () => {
       done();
     });
 
-    clients[0].attempt({
+    clients[firstAsker].attempt({
       type: "ask",
-      asker: 0,
-      askee: 1,
-      card: C.C_3,
+      asker: firstAsker,
+      askee: askee,
+      card: lowClub(askee), // askee truly owns this, so the answer is "yes"
     });
   });
 
@@ -135,9 +145,9 @@ describe("Client/Server", () => {
       done();
     });
 
-    clients[1].attempt({
+    clients[askee].attempt({
       type: "answer",
-      askee: 1,
+      askee: askee,
       response: true,
     });
   });
@@ -150,20 +160,24 @@ describe("Client/Server", () => {
       done();
     });
 
-    // allowing bluffs
-    clients[0].engine.handOf[0].cards[0].should.deep.equal(C.C_2);
-    clients[0].attempt({
+    // allowing bluffs: asker asks for a card they already hold
+    clients[firstAsker].engine.handOf[firstAsker]
+      .includes(lowClub(firstAsker))
+      .should.equal(true);
+    clients[firstAsker].attempt({
       type: "ask",
-      asker: 0,
-      askee: 1,
-      card: C.C_2,
+      asker: firstAsker,
+      askee: askee,
+      card: lowClub(firstAsker),
     });
   });
 
   it("runs an answer correctly", () => {
-    clients[0].engine.handOf[0].cards[9].should.deep.equal(C.C_3);
-    clients[1].engine.handOf[1].cards[0].should.deep.equal(C.C_9);
-    clients[2].engine.handSize[0].should.equal(10);
-    clients[2].engine.handSize[1].should.equal(8);
+    // a player's own hand is only visible in their own redacted view
+    clients[firstAsker].engine.handOf[firstAsker]
+      .includes(lowClub(askee))
+      .should.equal(true);
+    clients[2].engine.handSize[firstAsker].should.equal(10);
+    clients[2].engine.handSize[askee].should.equal(8);
   });
 });

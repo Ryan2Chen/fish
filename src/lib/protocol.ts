@@ -47,6 +47,7 @@ export namespace Protocol {
     server: null;
     hand: Hand | null;
     handSizes: Record<SeatID, number | null>;
+    asker: SeatID;
   };
 
   export type Ask = {

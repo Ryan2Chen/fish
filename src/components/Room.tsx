@@ -11,6 +11,7 @@ import { Info } from "components/Info";
 import { Log } from "components/Log";
 import { Players } from "components/Players";
 import { Question } from "components/Question";
+import { SpinWheel } from "components/SpinWheel";
 import andoverSeal from "assets/andover-seal.svg";
 import { CFish as C } from "lib/cfish";
 import { Client } from "lib/client";
@@ -204,6 +205,7 @@ class Room extends React.Component<Room.Props, Room.State> {
             <Question client={client} />
             {this.renderDeclare()}
             <CardAnim client={client} />
+            <SpinWheel client={client} />
           </div>
           <Action client={client} />
           {this.renderSubaction()}

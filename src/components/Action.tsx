@@ -53,6 +53,26 @@ export class Action extends React.Component<Action.Props, Action.State> {
     };
   }
 
+  renderTurnBanner() {
+    const { client } = this.props;
+    const { engine } = client;
+
+    if (engine.ownSeat === null || engine.activeSeat !== engine.ownSeat)
+      return null;
+
+    const label = {
+      [C.Phase.ASK]: "your turn to ask!",
+      [C.Phase.ANSWER]: "you're being asked!",
+      [C.Phase.DECLARE]: "you're declaring!",
+      [C.Phase.CHOOSE]: "you're choosing who goes next!",
+      [C.Phase.PASS]: "your turn to pass!",
+    }[engine.phase];
+
+    if (!label) return null;
+
+    return <div className="turnBanner">{label}</div>;
+  }
+
   renderText() {
     const { client } = this.props;
     const { engine } = client;
@@ -192,6 +212,7 @@ export class Action extends React.Component<Action.Props, Action.State> {
 
     return (
       <div className="action">
+        {this.renderTurnBanner()}
         <div>
           <LogItem item={this.renderText()} /> {this.renderTopButton()}
         </div>

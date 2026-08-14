@@ -356,14 +356,21 @@ export class Engine extends Data {
     this.declareBonus = {} as any;
     this.chooser = null;
 
-    this.asker = this.seats[0]; // host goes first
     this.phase = CFish.Phase.ASK;
+
+    if (this.identity === null) {
+      // picked once, here, so every client converges on the same seat
+      // instead of each independently rolling their own random asker
+      const asker = this.seats[Math.floor(Math.random() * this.seats.length)];
+      this.startGameResponse(null, null, this.handSize, asker);
+    }
   }
 
   startGameResponse(
     server: null,
     hand: Hand | null,
-    handSizes: Record<SeatID, number>
+    handSizes: Record<SeatID, number>,
+    asker: SeatID
   ): CFish.Result {
     if (this.ownSeat !== null && hand !== null) {
       this.handOf[this.ownSeat] = new Hand(hand);
@@ -372,6 +379,7 @@ export class Engine extends Data {
     if (this.ownHand !== null) {
       this.handSize[this.ownSeat] = this.ownHand.size;
     }
+    this.asker = asker;
   }
 
   // ASK -> ANSWER
