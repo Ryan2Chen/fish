@@ -1,6 +1,6 @@
 # cfish
 
-web app for playing the card game [canadian fish, also known as literature](https://www.pagat.com/quartet/literature.html). hosted on http://cfish.herokuapp.com/.
+web app for playing the card game [canadian fish, also known as literature](https://www.pagat.com/quartet/literature.html). hosted on andoverfish.com
 
 ## wishlist
 
