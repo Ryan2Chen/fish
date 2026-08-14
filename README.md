@@ -7,7 +7,7 @@ web app for playing the card game [canadian fish, also known as literature](http
 From 8/14 testing:
 - add stop watch / track time for the whole game
 - add track time for each person
-- victory/lose end screen with stats: time per person, # card taken from others, # cards taken from themself, MVP, Ace, track sets they were part of
+- victory/lose end screen with stats: time per person, # card taken from others, # cards taken from themself, MVP, Ace, track sets they were part of, # sets declared correct, # sets declared wrong
 - ui: maintain arrow so it stays until the next turn, easier to remember
 - Emoting
 - Chatbox
@@ -17,6 +17,7 @@ From 8/14 testing:
 - Fix declaration timing so that it's on the same round
 - potentially add more flexibility in declaring?
 - Clarify / test what happens when u stand up mid game / allow people to leave mid game and have someone else take over
+- exportable stats from the game
 
 - clean up css
 - make action more legible
