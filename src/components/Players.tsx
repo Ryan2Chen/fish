@@ -31,17 +31,24 @@ const PlayerInt = (props: {
     placement: "bottom",
   });
 
-  // chat bubble anchors to the avatar icon itself (same idea as Emote's
-  // own popper), not to the box as a whole, so it lines up with the icon
-  // regardless of name length or box height
+  // chat bubble anchors to the avatar row itself (same idea as Emote's own
+  // popper), not to the box as a whole, so it lines up with the icon
+  // regardless of name length or box height. The arrow modifier keeps the
+  // tail's attachment point correct even as the bubble's height changes
+  // (multi-line wraps) or its placement flips near an edge -- a fixed,
+  // hand-tuned CSS offset would drift out of sync with the actual bubble.
   const [avatarRef, setAvatarRef] = useState<HTMLElement>(null);
   const [chatRef, setChatRef] = useState<HTMLElement>(null);
+  const [chatArrowRef, setChatArrowRef] = useState<HTMLElement>(null);
   const { styles: chatStyles, attributes: chatAttributes } = usePopper(
     avatarRef,
     chatRef,
     {
       placement: props.chatBubbleSide === "left" ? "left" : "right",
-      modifiers: [{ name: "offset", options: { offset: [0, 12] } }],
+      modifiers: [
+        { name: "offset", options: { offset: [0, 12] } },
+        { name: "arrow", options: { element: chatArrowRef, padding: 4 } },
+      ],
     }
   );
 
@@ -64,6 +71,11 @@ const PlayerInt = (props: {
           {...chatAttributes.popper}
         >
           {props.chatMessage}
+          <div
+            className="chatBubbleTail"
+            ref={setChatArrowRef}
+            style={chatStyles.arrow}
+          />
         </div>
       ) : null}
       <div className="avatarRow" ref={setAvatarRef}>

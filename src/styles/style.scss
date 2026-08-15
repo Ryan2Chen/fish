@@ -605,26 +605,26 @@ input[type="text"] {
     background: var(--team-second);
   }
 
-  // long tail, anchored at the bubble's bottom corner, sweeping up so its
-  // tip lands level with the avatar -- width is the tail's length, height
-  // is its thickness; background matches whatever the bubble's is
-  &::after {
+  // long tail sweeping up toward the avatar -- width is the tail's length,
+  // height is its thickness, background matches whatever the bubble's is.
+  // Its vertical offset (top) comes from popper's arrow modifier (inline
+  // style), which keeps it correctly attached even as the bubble's height
+  // changes (multi-line wraps) or placement flips near a table edge; the
+  // rotation is purely decorative on top of that guaranteed-correct anchor.
+  .chatBubbleTail {
     background: inherit;
-    bottom: 0.1rem;
-    content: "";
     height: 0.6rem;
-    position: absolute;
     width: 2rem;
   }
 
-  &.left::after {
+  &.left .chatBubbleTail {
     clip-path: polygon(0 0, 0 100%, 100% 50%);
     left: 100%;
     transform: rotate(23deg);
     transform-origin: 0 50%;
   }
 
-  &.right::after {
+  &.right .chatBubbleTail {
     clip-path: polygon(100% 0, 100% 100%, 0 50%);
     right: 100%;
     transform: rotate(-23deg);
