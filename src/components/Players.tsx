@@ -80,16 +80,17 @@ const PlayerInt = (props: {
           {...chatAttributes.popper}
         >
           {props.chatMessage}
-          {/* An asymmetric polygon, not a rotated symmetric one: its base
-          edge is defined to lie exactly on the bubble's border and is
-          never transformed, so it can't visually separate from the
-          bubble regardless of where popper positions it vertically.
-          Only the tip point is offset up-and-over for the angled look. */}
+          {/* popper's arrow modifier writes its own inline `transform`
+          (a translate) onto whatever element it's given, which would
+          clobber a CSS rotation on the same element -- so positioning
+          (this ref) and rotation (the child) live on separate elements */}
           <div
-            className="chatBubbleTail"
+            className="chatBubbleTailAnchor"
             ref={setChatArrowRef}
             style={chatStyles.arrow}
-          />
+          >
+            <div className="chatBubbleTail" />
+          </div>
         </div>
       ) : null}
       <div className="avatarRow" ref={setAvatarRef}>
