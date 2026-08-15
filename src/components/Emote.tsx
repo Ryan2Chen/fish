@@ -1,8 +1,17 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { usePopper } from "react-popper";
 
 import { Client } from "lib/client";
 import { Protocol as P } from "lib/protocol";
+
+// largest divisor of n that's <= sqrt(n) -- picks the most "square" grid
+// shape available (9 -> 3x3, 8 -> 4x2, 6 -> 3x2, etc.)
+const gridRows = (n: number): number => {
+  let rows = Math.floor(Math.sqrt(n));
+  while (rows > 1 && n % rows !== 0) rows -= 1;
+  return rows;
+};
 
 export namespace Emote {
   export type Props = {
@@ -49,20 +58,26 @@ const EmoteComponent = (props: Emote.Props) => {
           <path d="M 27 9 L 37 9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
         </svg>
       </button>
-      {open ? (
-        <div
-          className="emoteOptions"
-          ref={setInRef}
-          style={styles.popper}
-          {...attributes.popper}
-        >
-          {P.EMOJIS.map((emoji) => (
-            <button key={emoji} onClick={() => send(emoji)}>
-              {emoji}
-            </button>
-          ))}
-        </div>
-      ) : null}
+      {open
+        ? createPortal(
+            <div
+              className="emoteOptions"
+              ref={setInRef}
+              style={{
+                ...styles.popper,
+                gridTemplateColumns: `repeat(${P.EMOJIS.length / gridRows(P.EMOJIS.length)}, auto)`,
+              }}
+              {...attributes.popper}
+            >
+              {P.EMOJIS.map((emoji) => (
+                <button key={emoji} onClick={() => send(emoji)}>
+                  {emoji}
+                </button>
+              ))}
+            </div>,
+            document.body
+          )
+        : null}
     </div>
   );
 };

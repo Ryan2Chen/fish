@@ -663,22 +663,25 @@ input[type="text"] {
       color: var(--gray-900);
     }
   }
+}
 
-  .emoteOptions {
-    background: var(--gray-0);
-    border-radius: 0.6rem;
-    box-shadow: var(--shadow);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.2rem;
-    max-width: 10rem;
-    padding: 0.3rem;
-    z-index: 20;
+// portaled to document.body (see Emote.tsx) so it always renders on top,
+// regardless of any stacking context a player box's ancestors create
+// (e.g. the active-player glow uses `filter`, which traps z-index of
+// normal descendants) -- this can no longer be nested under .emotePicker
+// since it's no longer a DOM descendant of it once portaled
+.emoteOptions {
+  background: var(--gray-0);
+  border-radius: 0.6rem;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.3rem;
+  z-index: 1000;
 
-    button {
-      font-size: 1.1rem;
-      padding: 0.1em 0.3em 0;
-    }
+  button {
+    font-size: 1.1rem;
+    padding: 0.1em 0.3em 0;
   }
 }
 
