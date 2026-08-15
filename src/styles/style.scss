@@ -648,7 +648,14 @@ input[type="text"] {
 
   &.left {
     .chatBubbleTailAnchor {
-      left: 100%;
+      // 100% would touch the bubble's edge exactly, but rotating the tail
+      // (below) pulls part of its base off that edge -- pulling the whole
+      // anchor a few px *into* the bubble means even the receded part of
+      // the rotated base still lands under the bubble's opaque body. This
+      // is a local overlap relative to the bubble's own edge, unlike the
+      // popper offset distance, which moves the bubble+tail together as
+      // one rigid unit and can't change their relative geometry at all.
+      left: calc(100% - 4px);
     }
 
     .chatBubbleTail {
@@ -660,7 +667,7 @@ input[type="text"] {
 
   &.right {
     .chatBubbleTailAnchor {
-      right: 100%;
+      right: calc(100% - 4px);
     }
 
     .chatBubbleTail {
