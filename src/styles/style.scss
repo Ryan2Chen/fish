@@ -589,34 +589,40 @@ input[type="text"] {
   overflow-wrap: break-word;
   padding: 0.3rem 0.5rem;
   position: absolute;
-  top: 50%;
+  top: 1.4rem; // roughly level with the avatar, not the whole box
   transform: translateY(-50%);
   z-index: 5;
 
-  // triangular tail pointing back at the player box
+  // long tail, anchored at the bubble's bottom corner, sweeping up toward
+  // the avatar -- width is the tail's length, height is its thickness
   &::after {
-    border: 0.4rem solid transparent;
+    background: var(--gray-0);
+    bottom: 0.1rem;
     content: "";
+    height: 0.6rem;
     position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
+    width: 1.6rem;
   }
 
   &.left {
-    right: calc(100% + 0.6rem);
+    right: calc(100% + 0.7rem);
 
     &::after {
-      border-left-color: var(--gray-0);
+      clip-path: polygon(0 0, 0 100%, 100% 50%);
       left: 100%;
+      transform: rotate(25deg);
+      transform-origin: 0 50%;
     }
   }
 
   &.right {
-    left: calc(100% + 0.6rem);
+    left: calc(100% + 0.7rem);
 
     &::after {
-      border-right-color: var(--gray-0);
+      clip-path: polygon(100% 0, 100% 100%, 0 50%);
       right: 100%;
+      transform: rotate(-25deg);
+      transform-origin: 100% 50%;
     }
   }
 }
