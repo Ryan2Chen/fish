@@ -88,8 +88,7 @@ describe("Client/Server", () => {
 
     clients[0].setRules({
       ...clients[0].engine.rules,
-      bluff: CFish.BluffRule.YES,
-      declare: CFish.DeclareRule.DURING_TURN,
+      log: CFish.LogRule.EVERYTHING,
     });
   });
 
@@ -153,17 +152,14 @@ describe("Client/Server", () => {
   });
 
   it("enforces rules", (done) => {
-    let run = false;
-    clients[0].socket.on("event", (event) => {
-      if (run) return;
-      run = true;
-      done();
-    });
-
-    // allowing bluffs: asker asks for a card they already hold
+    // asking for a card you already hold is always rejected
     clients[firstAsker].engine.handOf[firstAsker]
       .includes(lowClub(firstAsker))
       .should.equal(true);
+    clients[firstAsker].socket.once("error", (msg) => {
+      msg.should.equal("hand has asked card");
+      done();
+    });
     clients[firstAsker].attempt({
       type: "ask",
       asker: firstAsker,

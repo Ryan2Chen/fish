@@ -143,17 +143,16 @@ describe("Engine", () => {
   it("handles rules", () => {
     engine.setRules("a", {
       numPlayers: 6,
-      bluff: CFish.BluffRule.YES,
-      declare: CFish.DeclareRule.DURING_TURN,
       handSize: CFish.HandSizeRule.PUBLIC,
     });
     engine.startGame("a", false);
     engine.asker = 0; // first asker is now random; pin it for this fixed script
     engine.ask(0, 1, C.C_2);
     engine.answer(1, false);
-    engine
-      .initDeclare(3, FishSuit.HIGH_CLUBS)
-      .should.be.instanceOf(CFish.Error);
+    // declaring is allowed any time, not just on your own turn
+    (engine.initDeclare(3, FishSuit.HIGH_CLUBS) === undefined).should.equal(
+      true
+    );
   });
 
   it("runs with people added/removed", () => {

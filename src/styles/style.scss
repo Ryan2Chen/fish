@@ -39,7 +39,6 @@ body {
 }
 
 button,
-.option,
 .cardFrame .card,
 .declareArea .declareInner,
 .cardSelector,
@@ -1043,76 +1042,105 @@ $rotj: 90;
   }
 }
 
-.config {
+// gear button that opens the settings modal -- fixed to the viewport so it
+// sits in the top-right corner regardless of where Config mounts in the
+// tree; only rendered pre-game for the host (see Config.tsx)
+.configGear {
+  align-items: center;
+  background: var(--gray-0);
+  border: 2px solid var(--gray-300);
+  border-radius: 50%;
+  box-shadow: var(--shadow);
+  color: var(--gray-600);
   display: flex;
-  flex-direction: row;
+  height: 2.4rem;
+  justify-content: center;
+  padding: 0;
+  position: fixed;
+  right: 0.75rem;
+  top: 0.75rem;
+  width: 2.4rem;
+  z-index: 20;
 
-  &.disabled {
-    pointer-events: none;
-
-    .option {
-      background: transparent;
-    }
-
-    button {
-      background: transparent;
-      color: transparent;
-    }
+  &:hover {
+    background: var(--gray-100);
+    color: var(--gray-900);
   }
 }
 
-.option {
+.configModalOverlay {
   align-items: center;
-  background-color: var(--gray-100);
+  background: rgba(74, 59, 92, 0.4);
+  bottom: 0;
   display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
   justify-content: center;
-  margin: 0 0.25rem;
-  padding: 0.5rem;
-  text-align: center;
+  left: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 30;
+}
 
-  .title {
-    margin-bottom: 0.5rem;
-  }
+.configModal {
+  background: var(--gray-0);
+  border-radius: 0.6rem;
+  box-shadow: var(--shadow);
+  min-width: 20rem;
+  padding: 1rem 1.25rem;
+}
 
-  button {
-    background: var(--gray-300);
+.configModalHeader {
+  align-items: center;
+  display: flex;
+  font-family: "Baloo 2", sans-serif;
+  font-size: 1.1rem;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+
+  .configModalClose {
+    background: transparent;
     color: var(--gray-600);
-    height: auto;
-    min-height: 1.6em;
-    width: 100%;
+    font-size: 1.2rem;
+    height: 1.6rem;
+    line-height: 1;
+    padding: 0;
+    width: 1.6rem;
 
     &:hover {
-      background: var(--gray-50);
+      background: var(--gray-200);
       color: var(--gray-900);
-    }
-
-    &:disabled {
-      background: var(--gray-100);
-      color: var(--gray-900);
-
-      &:hover {
-        background: var(--gray-100);
-      }
     }
   }
 }
 
-.timerOption {
-  .timerInputs {
-    display: flex;
-    gap: 0.4rem;
-    margin-top: 0.4rem;
+.configRow {
+  align-items: center;
+  border-top: 1px solid var(--gray-200);
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 0.5rem 0;
 
-    label {
-      display: flex;
-      flex-direction: column;
-      font-size: 0.7rem;
+  select {
+    background: var(--gray-0);
+    border: 1px solid var(--gray-300);
+    border-radius: 0.4rem;
+    font: inherit;
+    padding: 0.2rem 0.4rem;
+  }
+
+  &.configSubRow {
+    border-top: none;
+    gap: 0.6rem;
+    justify-content: flex-start;
+    padding-top: 0;
+
+    .configLabel {
+      font-size: 0.75rem;
     }
 
     input {
-      width: 3.5rem;
+      width: 3.2rem;
     }
   }
 }

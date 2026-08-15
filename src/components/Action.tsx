@@ -175,10 +175,7 @@ export class Action extends React.Component<Action.Props, Action.State> {
 
     if (
       engine.ownSeat === null ||
-      (engine.phase !== C.Phase.ASK && engine.phase !== C.Phase.PASS) ||
-      (engine.rules.declare === C.DeclareRule.DURING_TURN &&
-        engine.ownSeat !== engine.asker &&
-        engine.handSize[engine.asker] !== 0)
+      (engine.phase !== C.Phase.ASK && engine.phase !== C.Phase.PASS)
     )
       return null;
 

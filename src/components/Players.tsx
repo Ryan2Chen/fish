@@ -231,8 +231,8 @@ export class Players extends React.Component<Players.Props, Players.State> {
       client.ask(seat, card);
       this.setState({ askee: null });
     };
-    const disabled =
-      engine.rules.bluff === C.BluffRule.YES ? [] : engine.ownHand?.cards;
+    // can't ask for a card you already hold
+    const disabled = engine.ownHand?.cards;
     const suits = Card.FISH_SUITS.filter((suit) =>
       engine.ownHand?.hasSuit(suit)
     );
