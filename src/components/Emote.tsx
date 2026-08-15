@@ -28,8 +28,26 @@ const EmoteComponent = (props: Emote.Props) => {
 
   return (
     <div className="emotePicker">
-      <button ref={setOutRef} onClick={() => setOpen(!open)}>
-        emote
+      <button
+        className="emoteTrigger"
+        ref={setOutRef}
+        onClick={() => setOpen(!open)}
+        title="emote"
+      >
+        <svg viewBox="0 0 40 40" width="16" height="16">
+          <circle cx="18" cy="20" r="15" fill="none" stroke="currentColor" strokeWidth="3" />
+          <circle cx="13" cy="18" r="1.8" fill="currentColor" />
+          <circle cx="23" cy="18" r="1.8" fill="currentColor" />
+          <path
+            d="M 11 24 Q 18 30 25 24"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            fill="none"
+          />
+          <path d="M 32 4 L 32 14" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+          <path d="M 27 9 L 37 9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
       </button>
       {open ? (
         <div

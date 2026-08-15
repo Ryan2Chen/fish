@@ -545,6 +545,12 @@ input[type="text"] {
   }
 }
 
+.avatarRow {
+  align-items: center;
+  display: flex;
+  gap: 0.15rem;
+}
+
 @keyframes emotePop {
   0% {
     opacity: 0;
@@ -575,7 +581,22 @@ input[type="text"] {
 }
 
 .emotePicker {
+  display: inline-flex;
   position: relative;
+
+  .emoteTrigger {
+    align-items: center;
+    background: transparent;
+    color: var(--gray-600);
+    display: flex;
+    height: auto;
+    padding: 0.1rem;
+
+    &:hover {
+      background: var(--gray-200);
+      color: var(--gray-900);
+    }
+  }
 
   .emoteOptions {
     background: var(--gray-0);

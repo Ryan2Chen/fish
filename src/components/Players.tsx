@@ -3,6 +3,7 @@ import { usePopper } from "react-popper";
 
 import { Avatar } from "components/Avatar";
 import { CardSelector } from "components/CardSelector";
+import { Emote } from "components/Emote";
 import { Card } from "lib/cards";
 import { CFish as C, SeatID } from "lib/cfish";
 import { Client } from "lib/client";
@@ -12,8 +13,10 @@ const PlayerInt = (props: {
   askBtn: JSX.Element | null;
   avatarId: string;
   cardSelector: (update: () => void) => JSX.Element | null;
+  client: Client;
   emoji: string | null;
   isHost: boolean;
+  isSelf: boolean;
   name: string;
   seatBtn: JSX.Element | null;
 }) => {
@@ -29,7 +32,10 @@ const PlayerInt = (props: {
       ref={setOutRef}
     >
       {props.emoji ? <div className="emoteBubble">{props.emoji}</div> : null}
-      <Avatar id={props.avatarId} />
+      <div className="avatarRow">
+        <Avatar id={props.avatarId} />
+        {props.isSelf ? <Emote client={props.client} /> : null}
+      </div>
       <span className="playerName">
         {props.isHost ? <span className="adminBadge">★</span> : null}
         {props.name}
@@ -187,10 +193,12 @@ export class Players extends React.Component<Players.Props, Players.State> {
               askBtn={this.renderAskBtn(seat)}
               avatarId={client.findUser(seat)?.avatar}
               cardSelector={(update) => this.renderCardSelector(seat, update)}
+              client={client}
               emoji={client.activeEmotes[seat] ?? null}
               isHost={
                 engine.userOf[seat] !== null && engine.userOf[seat] === engine.host
               }
+              isSelf={seat === engine.ownSeat}
               name={this.renderName(seat)}
               seatBtn={this.renderSeatBtn(seat)}
             />
