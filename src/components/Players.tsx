@@ -55,9 +55,15 @@ const PlayerInt = (props: {
     {
       placement: props.chatBubbleSide === "left" ? "left" : "right",
       // skidding (first value) shifts the bubble up along the cross axis,
-      // distance (second value) is the horizontal gap from the anchor
+      // distance (second value) is the horizontal gap from the anchor --
+      // kept small so the bubble sits close enough to cover the small gap
+      // left where the tail's rotated base lifts off the bubble's edge
+      // (a CSS margin can't do this: popper measures the element's actual
+      // rendered position, margin included, and solves for whatever
+      // translate is needed to hit its target -- so a margin just gets
+      // algebraically cancelled out of that calculation, no visible effect)
       modifiers: [
-        { name: "offset", options: { offset: [-24, 12] } },
+        { name: "offset", options: { offset: [-24, 4] } },
         // padding keeps the arrow's computed offset clear of the bubble's
         // rounded corners -- too close and the corner curve clips into the
         // arrow's flush edge, making it look detached from the bubble
