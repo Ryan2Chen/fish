@@ -4,6 +4,8 @@ web app for playing the card game [canadian fish, also known as literature](http
 
 ## wishlist
 
+- top person emote cutoff. prob just add some top padding <img width="530" height="180" alt="Screenshot 2026-08-14 at 11 46 43 PM" src="https://github.com/user-attachments/assets/74718b94-1e07-4719-b715-39281a553fed" />
+
 - pause needs to detect when we reconnect
 - have messages pop up
 - Add bottom padding for chat box so that it isn't touching the bottom of the screen
