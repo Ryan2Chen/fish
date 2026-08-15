@@ -63,7 +63,7 @@ const PlayerInt = (props: {
       // translate is needed to hit its target -- so a margin just gets
       // algebraically cancelled out of that calculation, no visible effect)
       modifiers: [
-        { name: "offset", options: { offset: [-24, 4] } },
+        { name: "offset", options: { offset: [-24, 2] } },
         // padding keeps the arrow's computed offset clear of the bubble's
         // rounded corners -- too close and the corner curve clips into the
         // arrow's flush edge, making it look detached from the bubble

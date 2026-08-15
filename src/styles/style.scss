@@ -629,8 +629,12 @@ input[type="text"] {
     // triangular chatBubbleTail. It just carries position from popper.
     // Thinner than before so it comfortably fits within the bubble's flat
     // edge (outside the rounded corners) even on a single-line message.
+    // Shorter than before too: at a 32px length, with only a ~4px gap
+    // between the bubble and the avatar, the tip overshot past the whole
+    // avatar and landed on the emote icon next to it instead -- this
+    // length is calibrated to land within the avatar itself.
     height: 0.45rem;
-    width: 2rem;
+    width: 1rem;
   }
 
   .chatBubbleTail {
