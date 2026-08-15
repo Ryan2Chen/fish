@@ -24,6 +24,28 @@ export class Chat extends React.Component<Chat.Props, Chat.State> {
   constructor(props) {
     super(props);
     this.state = { input: "" };
+    this.lastSeenLength = props.client.chatLog.length;
+  }
+
+  componentDidMount() {
+    this.scrollToBottom();
+  }
+
+  componentDidUpdate() {
+    // Chat re-renders on every game event, not just new chat messages --
+    // only autoscroll when a message actually arrived, so it doesn't yank
+    // someone back to the bottom while they're scrolled up reading history
+    const length = this.props.client.chatLog.length;
+    if (length !== this.lastSeenLength) {
+      this.lastSeenLength = length;
+      this.scrollToBottom();
+    }
+  }
+
+  scrollToBottom(): void {
+    const el = this.listRef.current;
+    if (el === null) return;
+    el.scrollTop = el.scrollHeight;
   }
 
   componentDidMount() {

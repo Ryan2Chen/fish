@@ -9,7 +9,7 @@ export namespace Protocol {
     avatar?: string;
   };
 
-  export const EMOJIS = ["👍", "😂", "😮", "😡", "❤️", "🎉"];
+  export const EMOJIS = ["👍", "😂", "😮", "😡", "❤️", "🎉", "😭", "😔", "💀"];
 
   export type AddUser = {
     type: "addUser";
@@ -25,6 +25,12 @@ export namespace Protocol {
   export type UnseatAt = {
     type: "unseatAt";
     seat: SeatID;
+  };
+
+  export type SwapSeats = {
+    type: "swapSeats";
+    seatA: SeatID;
+    seatB: SeatID;
   };
 
   export type RemoveUser = {
@@ -116,6 +122,7 @@ export namespace Protocol {
 
   export type Unpause = {
     type: "unpause";
+    user: UserID;
   };
 
   export type AdminReset = {
@@ -135,6 +142,7 @@ export namespace Protocol {
     | AddUser
     | SeatAt
     | UnseatAt
+    | SwapSeats
     | RemoveUser
     | SetRules
     | StartGame

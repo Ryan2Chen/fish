@@ -129,8 +129,8 @@ export class Room {
 
     this.disconnectTimers[user.id] = setTimeout(() => {
       delete this.disconnectTimers[user.id];
-      this.engine.unpause();
-      this.event({ type: "unpause" });
+      this.engine.unpause(user.id);
+      this.event({ type: "unpause", user: user.id });
       this.leave(user);
     }, this.disconnectTimeoutMs);
   }
@@ -148,9 +148,9 @@ export class Room {
       clearTimeout(timer);
       delete this.disconnectTimers[user.id];
     }
-    if (this.engine.paused && this.engine.pausedUser === user.id) {
-      this.engine.unpause();
-      this.event({ type: "unpause" });
+    if (this.engine.pausedUsers.includes(user.id)) {
+      this.engine.unpause(user.id);
+      this.event({ type: "unpause", user: user.id });
     }
   }
 
@@ -185,6 +185,16 @@ export class Room {
       }
       case "unseatAt": {
         result = this.engine.unseatAt(event.seat);
+        if (result instanceof C.Error) return error(result.msg);
+        break;
+      }
+      case "swapSeats": {
+        // only the host or one of the two seats involved can trigger it --
+        // no random player should be able to shuffle two others around
+        const isHost = user.id === this.engine.host;
+        const isInvolved = seat === event.seatA || seat === event.seatB;
+        if (!isHost && !isInvolved) return error("bad user");
+        result = this.engine.swapSeats(event.seatA, event.seatB);
         if (result instanceof C.Error) return error(result.msg);
         break;
       }
@@ -272,6 +282,11 @@ export class Room {
         this.reset(this.findUser(event.user));
         break;
       }
+      case "swapSeats": {
+        this.reset(this.findUser(this.engine.userOf[event.seatA]));
+        this.reset(this.findUser(this.engine.userOf[event.seatB]));
+        break;
+      }
       case "startGame": {
         this.event({
           type: "startGameResponse",
@@ -318,6 +333,22 @@ export class Server {
       // token, so the rest of the listeners are wired up inside "join"
       client.on("join", (room, name, token) => {
         const id = token as UserID;
+
+        // this token already has a live connection elsewhere (e.g. the SPA
+        // navigated to a new room without a full page reload, or a
+        // duplicate tab). Clean up its OLD room right here, synchronously,
+        // using the room it's actually in -- don't just close the socket
+        // and rely on its own "disconnect" handler firing later, since by
+        // then roomOf[id] below would already point at the room we're
+        // about to join, misattributing the stale connection's disconnect
+        // to the wrong room entirely.
+        const stale = this.clients[id];
+        if (stale !== undefined && stale !== client && stale.connected) {
+          stale.removeAllListeners("disconnect");
+          this.disconnect(id);
+          stale.disconnect(true);
+        }
+
         this.clients[id] = client;
         // an explicit room named after the token lets us address this
         // persistent user directly even after their connection id changes

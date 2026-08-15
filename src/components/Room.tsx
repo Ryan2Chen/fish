@@ -34,7 +34,7 @@ export namespace Room {
     name?: string | null;
     nameInput?: string;
     room?: string;
-    sidebar?: "closed" | "info" | "log" | "chat";
+    sidebar?: "closed" | "info" | "log";
   };
 }
 
@@ -61,6 +61,14 @@ class Room extends React.Component<Room.Props, Room.State> {
 
   componentDidMount() {
     if (this.state.name !== null) this.startClient(this.state.name);
+  }
+
+  componentWillUnmount() {
+    // without this, navigating away within the app (not a full page
+    // reload) leaves this socket connected in the background; the server
+    // only learns it's gone whenever it eventually times out, and by then
+    // it can get misattributed to whatever room this token joins next
+    this.state.client?.socket.disconnect();
   }
 
   startClient(name: string) {
@@ -142,7 +150,7 @@ class Room extends React.Component<Room.Props, Room.State> {
     return null;
   }
 
-  renderToggle(pane: "info" | "log" | "chat") {
+  renderToggle(pane: "info" | "log") {
     const { client, sidebar } = this.state;
     const { engine } = client;
     const label = sidebar !== pane ? `show ${pane}` : `hide ${pane}`;
@@ -155,22 +163,25 @@ class Room extends React.Component<Room.Props, Room.State> {
 
   renderSidebar() {
     const { client, sidebar } = this.state;
-    const { engine } = client;
-    const logvis = engine.rules.log !== C.LogRule.LAST_ACTION;
 
     return (
       <>
         <Info active={sidebar === "info"} client={client} lone={false} />
-        {logvis ? <Log active={sidebar === "log"} client={client} /> : null}
-        <Chat active={sidebar === "chat"} client={client} />
+        {/* always visible now -- it used to only render at all once the
+            "log" rule was set away from its default (LAST_ACTION), so the
+            most recent ask was invisible by default unless you happened
+            to know to change that rule */}
+        <Log active={sidebar === "log"} client={client} />
+        {/* always visible, not gated behind a toggle -- like a poker
+            table's chat, you shouldn't have to open it every time */}
+        <Chat active client={client} />
         <div
           className={`toggles ${
             this.state.sidebar === "closed" ? "" : "active"
           }`}
         >
           {this.renderToggle("info")}
-          {logvis ? this.renderToggle("log") : null}
-          {this.renderToggle("chat")}
+          {this.renderToggle("log")}
         </div>
       </>
     );
@@ -206,8 +217,9 @@ class Room extends React.Component<Room.Props, Room.State> {
         <div className="game">
           {engine.paused ? (
             <div className="pausedBanner">
-              {client.nameOf(engine.pausedUser)} disconnected &mdash; waiting
-              up to a minute to reconnect. cards and the board stay put.
+              {engine.pausedUsers.map((u) => client.nameOf(u)).join(", ")}{" "}
+              disconnected &mdash; waiting up to a minute to reconnect. cards
+              and the board stay put.
             </div>
           ) : null}
           <div className="table">

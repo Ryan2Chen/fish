@@ -64,7 +64,13 @@ export class Client {
     public name: string,
     readonly token: UserID
   ) {
-    this.socket = io(url);
+    // without forceNew, socket.io-client caches and reuses a single
+    // "Manager" per URI -- fine in the common case, but our test suite
+    // creates and tears down many servers on ephemeral ports in quick
+    // succession, and a recycled port could hand a brand new Client a
+    // stale Manager still wired to a server that's already gone. Each
+    // Client here is meant to be an independent connection regardless.
+    this.socket = io(url, { forceNew: true });
 
     this.socket.on("users", (users) => {
       this.users = users;
@@ -236,7 +242,7 @@ export class Client {
     this.engine.chooser = data.chooser;
 
     this.engine.paused = data.paused;
-    this.engine.pausedUser = data.pausedUser;
+    this.engine.pausedUsers = data.pausedUsers;
 
     this.engine.chips = data.chips;
 
@@ -267,6 +273,13 @@ export class Client {
       case "unseatAt":
         this.engine.unseatAt(event.seat);
         break;
+      case "swapSeats": {
+        const nameA = this.nameOf(event.seatA);
+        const nameB = this.nameOf(event.seatB);
+        this.engine.swapSeats(event.seatA, event.seatB);
+        this.log.push(`${nameA} and ${nameB} swapped seats`);
+        break;
+      }
       case "removeUser":
         this.engine.removeUser(event.user);
         break;
@@ -324,7 +337,7 @@ export class Client {
           this.log.push(
             response
               ? `${askeeName} gave ${askerName} the ${cardName}`
-              : `${askeeName} did not have the ${cardName}`
+              : `${askeeName} did not have the ${cardName}, asked by ${askerName}`
           );
           if (response) {
             const { asker, askee, askedCard } = this.engine;
@@ -404,10 +417,14 @@ export class Client {
         this.engine.pause(event.user);
         this.log.push(`${this.nameOf(event.user)} disconnected, game paused`);
         break;
-      case "unpause":
-        this.engine.unpause();
-        this.log.push("game resumed");
+      case "unpause": {
+        const name = this.nameOf(event.user);
+        this.engine.unpause(event.user);
+        this.log.push(
+          this.engine.paused ? `${name} reconnected` : `${name} reconnected, game resumed`
+        );
         break;
+      }
       case "adminReset":
         this.engine.adminReset(event.user);
         this.log = [];
@@ -457,6 +474,14 @@ export class Client {
     return this.attempt({
       type: "unseatAt",
       seat: this.engine.ownSeat,
+    });
+  }
+
+  swapSeats(otherSeat: SeatID): void {
+    return this.attempt({
+      type: "swapSeats",
+      seatA: this.engine.ownSeat,
+      seatB: otherSeat,
     });
   }
 

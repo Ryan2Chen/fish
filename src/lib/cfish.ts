@@ -144,10 +144,14 @@ export class Data {
   // seat spending a banked bonus to pick the next asker, initially null
   chooser: SeatID | null = null;
 
-  // true while waiting on a disconnected player to reconnect
+  // true while waiting on one or more disconnected players to reconnect
   paused: boolean = false;
-  // who we're waiting on, initially null
-  pausedUser: UserID | null = null;
+  // everyone we're currently waiting on. plural: a single pausedUser field
+  // meant a second disconnect overwrote tracking of the first, so their
+  // reconnect alone would wrongly clear "paused" while the first player
+  // was still gone -- the game would look resumed until that first
+  // player's own timeout silently removed their seat later, mid-hand
+  pausedUsers: UserID[] = [];
 
   // chip balance per user; persists across games in the same room
   chips: Record<UserID, number> = {} as any;
@@ -369,7 +373,7 @@ export class Engine extends Data {
     res.chooser = this.chooser;
 
     res.paused = this.paused;
-    res.pausedUser = this.pausedUser;
+    res.pausedUsers = this.pausedUsers;
 
     res.chips = this.chips;
 
@@ -410,6 +414,21 @@ export class Engine extends Data {
     if (this.userOf[seat] === null) return new CFish.Error("seat is empty");
 
     this.userOf[seat] = null;
+  }
+
+  // WAIT -> WAIT
+  // lets two seated players trade seats before a hand starts (e.g. to
+  // rebalance who ends up on which team) without the race of a manual
+  // stand-up-then-sit-down leaving either seat briefly grabbable
+  swapSeats(seatA: SeatID, seatB: SeatID): CFish.Result {
+    if (this.phase !== CFish.Phase.WAIT) return new CFish.Error("bad phase");
+    if (seatA === seatB) return new CFish.Error("same seat");
+    if (this.userOf[seatA] === null || this.userOf[seatB] === null)
+      return new CFish.Error("both seats must be occupied");
+
+    const temp = this.userOf[seatA];
+    this.userOf[seatA] = this.userOf[seatB];
+    this.userOf[seatB] = temp;
   }
 
   removeUser(user: UserID): CFish.Result {
@@ -591,13 +610,15 @@ export class Engine extends Data {
   // any phase -> itself, paused
   // server-driven: called when a seated player disconnects/reconnects
   pause(user: UserID): CFish.Result {
+    if (!this.pausedUsers.includes(user)) this.pausedUsers.push(user);
     this.paused = true;
-    this.pausedUser = user;
   }
 
-  unpause(): CFish.Result {
-    this.paused = false;
-    this.pausedUser = null;
+  // only this one user's wait is over -- stay paused if anyone else is
+  // still out (see the pausedUsers field comment for why this matters)
+  unpause(user: UserID): CFish.Result {
+    this.pausedUsers = this.pausedUsers.filter((u) => u !== user);
+    this.paused = this.pausedUsers.length > 0;
   }
 
   // ASK / PASS -> DECLARE
