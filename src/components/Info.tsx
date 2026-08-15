@@ -147,7 +147,6 @@ export class Info extends React.Component<Info.Props, Info.State> {
             </li>
           ))}
         </ul>
-        <p>members:</p>
         <ul>
           {engine.seats
             .filter((seat) => engine.teamOf(seat) === team)
