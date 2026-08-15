@@ -5,6 +5,7 @@ web app for playing the card game [canadian fish, also known as literature](http
 ## wishlist
 
 - pause needs to detect when we reconnect
+- have messages pop up
 - Add bottom padding for chat box so that it isn't touching the bottom of the screen
 - fix this UI option configuration: <img width="523" height="169" alt="image" src="https://github.com/user-attachments/assets/ac9d7a63-32cb-4515-bc69-b07d7c30d1ea" />
 - add white background to users' boxes rather than having it be transparent: <img width="217" height="98" alt="image" src="https://github.com/user-attachments/assets/a3eec0ec-0baa-4fcd-90f1-e2c21abc7d85" />
