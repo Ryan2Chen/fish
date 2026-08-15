@@ -615,55 +615,29 @@ input[type="text"] {
     --bubble-bg: var(--team-second);
   }
 
-  // long tail sweeping up toward the avatar -- width is the tail's length,
-  // height is its thickness. chatBubbleTailAnchor's position (top) comes
-  // from popper's arrow modifier via inline style, which keeps it
-  // correctly attached even as the bubble's height changes (multi-line
-  // wraps) or placement flips near a table edge. The rotation lives on the
-  // nested chatBubbleTail instead of the anchor itself, because popper's
-  // inline style also sets its own `transform` (a translate) on the
-  // anchor, which would otherwise clobber a CSS rotation on that element.
-  .chatBubbleTailAnchor {
-    // deliberately no background here -- this box is an unclipped
-    // rectangle, so painting it would show as a hard-edged box behind the
-    // triangular chatBubbleTail. It just carries position from popper.
-    // Thinner than before so it comfortably fits within the bubble's flat
-    // edge (outside the rounded corners) even on a single-line message.
-    height: 0.45rem;
+  // Tail: an asymmetric polygon, not a rotated symmetric one. Its base
+  // (the edge touching the bubble) is defined in the clip-path to lie
+  // exactly on this box's outer edge and is never transformed -- popper's
+  // arrow modifier only ever translates this element vertically (via
+  // inline style), so that base edge stays pixel-flush against the
+  // bubble's border no matter where it lands. Only the tip point is
+  // offset up-and-over, which is what gives the angled look -- rotating a
+  // symmetric triangle instead would only keep one point flush and let
+  // the rest of its base swing away from the bubble, opening a gap.
+  .chatBubbleTail {
+    background: var(--bubble-bg);
+    height: 1rem;
     width: 2rem;
   }
 
-  .chatBubbleTail {
-    // custom properties cascade through chatBubbleTailAnchor automatically
-    // even though that element has no background of its own, unlike plain
-    // `background: inherit` which only looks at the direct parent
-    background: var(--bubble-bg);
-    height: 100%;
-    width: 100%;
+  &.left .chatBubbleTail {
+    clip-path: polygon(0 50%, 0 100%, 100% 0);
+    left: 100%;
   }
 
-  &.left {
-    .chatBubbleTailAnchor {
-      left: 100%;
-    }
-
-    .chatBubbleTail {
-      clip-path: polygon(0 0, 0 100%, 100% 50%);
-      transform: rotate(23deg);
-      transform-origin: 0 50%;
-    }
-  }
-
-  &.right {
-    .chatBubbleTailAnchor {
-      right: 100%;
-    }
-
-    .chatBubbleTail {
-      clip-path: polygon(100% 0, 100% 100%, 0 50%);
-      transform: rotate(-23deg);
-      transform-origin: 100% 50%;
-    }
+  &.right .chatBubbleTail {
+    clip-path: polygon(100% 50%, 100% 100%, 0 0);
+    right: 100%;
   }
 }
 
