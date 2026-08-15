@@ -9,6 +9,8 @@ export namespace Protocol {
     avatar?: string;
   };
 
+  export const EMOJIS = ["👍", "😂", "😮", "😡", "❤️", "🎉"];
+
   export type AddUser = {
     type: "addUser";
     user: UserID;

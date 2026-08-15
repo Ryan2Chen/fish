@@ -238,6 +238,19 @@ input[type="text"] {
   width: min-content;
 }
 
+// non-blocking: the board and hand stay visible underneath while paused
+.pausedBanner {
+  background: var(--gray-100);
+  border: 1px solid var(--gray-300);
+  border-radius: 0.4rem;
+  box-shadow: var(--shadow);
+  color: var(--gray-900);
+  margin: 0.5rem 0 0;
+  max-width: 24rem;
+  padding: 0.4rem 0.8rem;
+  text-align: center;
+}
+
 .toggles {
   display: none;
 }
@@ -348,6 +361,33 @@ input[type="text"] {
   overflow-y: scroll;
 }
 
+.chat {
+  display: flex;
+  flex-direction: column;
+
+  ul {
+    flex: 1;
+    list-style: none;
+    margin: 0.5rem 0;
+    overflow-y: scroll;
+    padding: 0;
+
+    .playerName {
+      font-weight: 600;
+    }
+  }
+
+  form {
+    display: flex;
+    gap: 0.3rem;
+
+    input {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+}
+
 @media screen and (max-width: 750px) {
   .room {
     display: flex;
@@ -366,7 +406,8 @@ input[type="text"] {
   }
 
   .info,
-  .log {
+  .log,
+  .chat {
     background: var(--gray-0);
     box-shadow: var(--shadow);
     bottom: 0;
@@ -473,6 +514,54 @@ input[type="text"] {
   &.active {
     background: var(--gray-0);
     filter: drop-shadow(0 0 6px var(--accent));
+  }
+}
+
+@keyframes emotePop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0.3rem) scale(0.5);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1.15);
+  }
+  25% {
+    transform: translate(-50%, 0) scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.emoteBubble {
+  animation: emotePop 2.5s ease forwards;
+  font-size: 1.6rem;
+  left: 50%;
+  position: absolute;
+  top: -1.6rem;
+  z-index: 5;
+}
+
+.emotePicker {
+  position: relative;
+
+  .emoteOptions {
+    background: var(--gray-0);
+    border-radius: 0.6rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    gap: 0.2rem;
+    padding: 0.3rem;
+    z-index: 20;
+
+    button {
+      font-size: 1.1rem;
+      padding: 0.1em 0.3em 0;
+    }
   }
 }
 

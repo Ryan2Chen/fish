@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { usePopper } from "react-popper";
 
+import { Emote } from "components/Emote";
 import { LogItem } from "components/Log";
 import { SuitSelector } from "components/SuitSelector";
 import { Card, fishSuitToString } from "lib/cards";
@@ -231,6 +232,7 @@ export class Action extends React.Component<Action.Props, Action.State> {
           sortBtn={this.renderSortButton()}
           suitSelector={(update) => this.renderSuitSelector(update)}
         />
+        <Emote client={client} />
       </div>
     );
   }

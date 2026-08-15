@@ -8,7 +8,7 @@ import {
 } from "react-archer";
 
 import { CardSpan } from "components/Card";
-import { CFish as C, SeatID } from "lib/cfish";
+import { SeatID } from "lib/cfish";
 import { Client } from "lib/client";
 
 namespace PlayerTarget {
@@ -42,18 +42,21 @@ export namespace Question {
 export class Question extends React.Component<Question.Props> {
   render() {
     const { client } = this.props;
-    const { engine } = client;
+    const { engine, lastAsk } = client;
 
-    const label = (
+    const label = lastAsk && (
       <div className="label">
-        <CardSpan card={engine.askedCard} />
+        <CardSpan card={lastAsk.card} />
       </div>
     );
 
+    // keeps pointing at the asker/askee of the most recent ask -- lastAsk is
+    // a frozen snapshot, so this stays correct even after engine.asker gets
+    // reassigned by a bad ask transferring the turn
     const relations = (id: SeatID) => {
-      if (engine.phase !== C.Phase.ANSWER || id !== engine.asker) return [];
+      if (lastAsk === null || id !== lastAsk.asker) return [];
       const obj = {
-        targetId: engine.askee.toString(),
+        targetId: lastAsk.askee.toString(),
         targetAnchor: "top" as AnchorPosition,
         sourceAnchor: "top" as AnchorPosition,
         label: label,

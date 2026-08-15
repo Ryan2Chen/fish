@@ -7,6 +7,8 @@ import { RoomID, UserID } from "lib/server";
 
 // how long an answer's resolution stays suspenseful before it's revealed
 const ANSWER_REVEAL_MS = 1800;
+// how long an emote bubble lingers over a player's avatar
+const EMOTE_MS = 2500;
 
 export class Client {
   engine: Engine | null = null;
@@ -15,6 +17,11 @@ export class Client {
   socket: Socket;
   status: "waiting" | "connected" | "disconnected" = "waiting";
   users: P.User[] = [];
+
+  chatLog: { user: P.User; message: string }[] = [];
+  // emoji currently floating over a seat's avatar, cleared after EMOTE_MS
+  activeEmotes: Partial<Record<SeatID, string>> = {};
+  emoteTimers: Partial<Record<SeatID, ReturnType<typeof setTimeout>>> = {};
 
   cardAnimHook:
     | ((asker: SeatID, askee: SeatID, askedCard: Card) => void)
@@ -32,6 +39,11 @@ export class Client {
   // the frozen "asked" line to show in place of whatever comes next
   pendingReveal: string | null = null;
   pendingRevealTimer: ReturnType<typeof setTimeout> | null = null;
+  // the most recent ask, kept around (independent of the live, mutable
+  // engine.asker/askee) so the question arrow stays visible and pointing at
+  // the right seats through the answer and past the turn transfer, instead
+  // of vanishing the instant the phase moves on
+  lastAsk: { asker: SeatID; askee: SeatID; card: Card } | null = null;
 
   constructor(
     readonly url: string,
@@ -51,6 +63,8 @@ export class Client {
     this.socket.on("rename", (user, name) => this.rename(user, name));
     this.socket.on("setAvatar", (user, avatar) => this.setAvatar(user, avatar));
     this.socket.on("leave", (user) => this.leave(user));
+    this.socket.on("chat", (user, message) => this.receiveChat(user, message));
+    this.socket.on("emote", (user, emoji) => this.receiveEmote(user, emoji));
   }
 
   // getters
@@ -132,6 +146,27 @@ export class Client {
     this.onUpdate?.(this);
   }
 
+  receiveChat(user: P.User, message: string): void {
+    this.chatLog.push({ user, message });
+    this.onUpdate?.(this);
+  }
+
+  receiveEmote(user: P.User, emoji: string): void {
+    const seat = this.engine?.seatOf(user.id);
+    if (seat === null || seat === undefined) return;
+
+    if (this.emoteTimers[seat] !== undefined) {
+      clearTimeout(this.emoteTimers[seat]);
+    }
+    this.activeEmotes[seat] = emoji;
+    this.emoteTimers[seat] = setTimeout(() => {
+      delete this.emoteTimers[seat];
+      delete this.activeEmotes[seat];
+      this.onUpdate?.(this);
+    }, EMOTE_MS);
+    this.onUpdate?.(this);
+  }
+
   // get redacted state and initiate engine
   reset(data: Data): void {
     if (this.engine === null) {
@@ -201,6 +236,7 @@ export class Client {
       case "startGame":
         this.engine.startGame(event.user);
         this.log = [];
+        this.lastAsk = null;
         this.log.push(`${this.nameOf(event.user)} started the game`);
         break;
       case "startGameResponse":
@@ -220,6 +256,7 @@ export class Client {
       case "ask":
         const card = new Card(event.card.cardSuit, event.card.rank);
         this.engine.ask(event.asker, event.askee, card);
+        this.lastAsk = { asker: event.asker, askee: event.askee, card };
         this.log.push(
           `${sfy("asker")} asked ${sfy("askee")} for the ${sfy("askedCard")}`
         );
@@ -327,6 +364,7 @@ export class Client {
       case "adminReset":
         this.engine.adminReset(event.user);
         this.log = [];
+        this.lastAsk = null;
         this.log.push(`${this.nameOf(event.user)} reset the game`);
         break;
     }
@@ -346,6 +384,14 @@ export class Client {
 
   attemptSetAvatar(avatar: string): void {
     this.socket.emit("setAvatar", avatar);
+  }
+
+  sendChat(message: string): void {
+    this.socket.emit("chat", message);
+  }
+
+  sendEmote(emoji: string): void {
+    this.socket.emit("emote", emoji);
   }
 
   seatAt(seat: SeatID): void {

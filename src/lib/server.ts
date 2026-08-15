@@ -81,6 +81,23 @@ export class Room {
     this.toAll("setAvatar", user, avatar);
   }
 
+  // chat/emotes stay usable even while the game is paused (a disconnect
+  // shouldn't also mute everyone else), so they bypass update()'s gate
+  chat(user: P.User, message: string): void {
+    if (!assert(this.findUser(user.id) !== null)) return;
+    const trimmed = message.slice(0, 280).trim();
+    if (!trimmed) return;
+
+    this.toAll("chat", user, trimmed);
+  }
+
+  emote(user: P.User, emoji: string): void {
+    if (!assert(this.findUser(user.id) !== null)) return;
+    if (!P.EMOJIS.includes(emoji)) return;
+
+    this.toAll("emote", user, emoji);
+  }
+
   leave(user: P.User): void {
     const idx = this.users.findIndex((user_) => user_.id === user.id);
     if (!assert(idx !== -1)) return;
@@ -293,6 +310,8 @@ export class Server {
         client.on("event", (event) => this.event(id, event));
         client.on("rename", (name) => this.rename(id, name));
         client.on("setAvatar", (avatar) => this.setAvatar(id, avatar));
+        client.on("chat", (message) => this.chat(id, message));
+        client.on("emote", (emoji) => this.emote(id, emoji));
         client.on("disconnect", () => this.disconnect(id));
 
         this.join(id, room, name);
@@ -352,6 +371,16 @@ export class Server {
   setAvatar(id: UserID, avatar: string): void {
     const { user, room } = this.userAndRoom(id);
     this.rooms[room]?.setAvatar(user, avatar);
+  }
+
+  chat(id: UserID, message: string): void {
+    const { user, room } = this.userAndRoom(id);
+    this.rooms[room]?.chat(user, message);
+  }
+
+  emote(id: UserID, emoji: string): void {
+    const { user, room } = this.userAndRoom(id);
+    this.rooms[room]?.emote(user, emoji);
   }
 
   disconnect(id: UserID): void {

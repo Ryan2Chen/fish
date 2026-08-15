@@ -12,6 +12,7 @@ const PlayerInt = (props: {
   askBtn: JSX.Element | null;
   avatarId: string;
   cardSelector: (update: () => void) => JSX.Element | null;
+  emoji: string | null;
   isHost: boolean;
   name: string;
   seatBtn: JSX.Element | null;
@@ -27,6 +28,7 @@ const PlayerInt = (props: {
       className={`playerInt ${props.active ? "active" : ""}`}
       ref={setOutRef}
     >
+      {props.emoji ? <div className="emoteBubble">{props.emoji}</div> : null}
       <Avatar id={props.avatarId} />
       <span className="playerName">
         {props.isHost ? <span className="adminBadge">★</span> : null}
@@ -185,6 +187,7 @@ export class Players extends React.Component<Players.Props, Players.State> {
               askBtn={this.renderAskBtn(seat)}
               avatarId={client.findUser(seat)?.avatar}
               cardSelector={(update) => this.renderCardSelector(seat, update)}
+              emoji={client.activeEmotes[seat] ?? null}
               isHost={
                 engine.userOf[seat] !== null && engine.userOf[seat] === engine.host
               }

@@ -5,6 +5,7 @@ import { RouteComponentProps } from "react-router";
 import { Action } from "components/Action";
 import { CardAnim } from "components/CardAnim";
 import { CardArea } from "components/CardArea";
+import { Chat } from "components/Chat";
 import { Config } from "components/Config";
 import { Declare } from "components/Declare";
 import { Info } from "components/Info";
@@ -31,7 +32,7 @@ export namespace Room {
     name?: string | null;
     nameInput?: string;
     room?: string;
-    sidebar?: "closed" | "info" | "log";
+    sidebar?: "closed" | "info" | "log" | "chat";
   };
 }
 
@@ -131,7 +132,7 @@ class Room extends React.Component<Room.Props, Room.State> {
     return null;
   }
 
-  renderToggle(pane: "info" | "log") {
+  renderToggle(pane: "info" | "log" | "chat") {
     const { client, sidebar } = this.state;
     const { engine } = client;
     const label = sidebar !== pane ? `show ${pane}` : `hide ${pane}`;
@@ -149,8 +150,9 @@ class Room extends React.Component<Room.Props, Room.State> {
 
     return (
       <>
-        <Info active={sidebar === "info"} client={client} lone={!logvis} />
+        <Info active={sidebar === "info"} client={client} lone={false} />
         {logvis ? <Log active={sidebar === "log"} client={client} /> : null}
+        <Chat active={sidebar === "chat"} client={client} />
         <div
           className={`toggles ${
             this.state.sidebar === "closed" ? "" : "active"
@@ -158,6 +160,7 @@ class Room extends React.Component<Room.Props, Room.State> {
         >
           {this.renderToggle("info")}
           {logvis ? this.renderToggle("log") : null}
+          {this.renderToggle("chat")}
         </div>
       </>
     );
@@ -187,19 +190,16 @@ class Room extends React.Component<Room.Props, Room.State> {
       return <div className="game">loading...</div>;
     }
 
-    if (engine.paused) {
-      return (
-        <div className="game">
-          game paused &mdash; waiting for {client.nameOf(engine.pausedUser)}{" "}
-          to reconnect (up to a minute)
-        </div>
-      );
-    }
-
     return (
       <div className="room">
         <img className="andoverBadge" src={andoverSeal} alt="Phillips Academy Andover seal" />
         <div className="game">
+          {engine.paused ? (
+            <div className="pausedBanner">
+              {client.nameOf(engine.pausedUser)} disconnected &mdash; waiting
+              up to a minute to reconnect. cards and the board stay put.
+            </div>
+          ) : null}
           <div className="table">
             <Players client={client} />
             <Question client={client} />
