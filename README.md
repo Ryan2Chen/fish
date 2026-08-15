@@ -4,14 +4,8 @@ web app for playing the card game [canadian fish, also known as literature](http
 
 ## wishlist
 
-- top person emote cutoff. prob just add some top padding <img width="530" height="180" alt="Screenshot 2026-08-14 at 11 46 43 PM" src="https://github.com/user-attachments/assets/74718b94-1e07-4719-b715-39281a553fed" />
-
 - pause needs to detect when we reconnect
-- have messages pop up
-- Add bottom padding for chat box so that it isn't touching the bottom of the screen
 - fix this UI option configuration: <img width="523" height="169" alt="image" src="https://github.com/user-attachments/assets/ac9d7a63-32cb-4515-bc69-b07d7c30d1ea" />
-- add white background to users' boxes rather than having it be transparent: <img width="217" height="98" alt="image" src="https://github.com/user-attachments/assets/a3eec0ec-0baa-4fcd-90f1-e2c21abc7d85" />
-- replace "emote" button with the options that get revealed upon clicking it
 - Fix it crashing when someone disconnects / other people crashing and being unable to reload
 
 
@@ -31,7 +25,6 @@ From 8/14 testing:
 - make action more legible
 - think about overall layout again
   - score in info panel should be moved
-- color things not gray
 - allow declares to be canceled?
 - show cards to spectators?
 - handle errors other than logging to console
@@ -39,6 +32,4 @@ From 8/14 testing:
 - make logitem nicer
 - use actual card pictures?
 - add audio cues and volume control
-- add settings for number of suits
-- add settings for number of players
 - predict actions client-side
