@@ -643,6 +643,12 @@ input[type="text"] {
   }
 
   &.left {
+    // nudges the bubble a few px toward the tail (margin, not transform,
+    // so it doesn't fight popper's own inline transform) so its edge
+    // overlaps the tail's base and covers the gap opened by rotating a
+    // symmetric triangle around a single pivot point on that base
+    margin-right: -7px;
+
     .chatBubbleTailAnchor {
       left: 100%;
     }
@@ -655,6 +661,8 @@ input[type="text"] {
   }
 
   &.right {
+    margin-left: -7px;
+
     .chatBubbleTailAnchor {
       right: 100%;
     }
