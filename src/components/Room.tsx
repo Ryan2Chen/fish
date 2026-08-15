@@ -207,8 +207,9 @@ class Room extends React.Component<Room.Props, Room.State> {
         <div className="game">
           {engine.paused ? (
             <div className="pausedBanner">
-              {client.nameOf(engine.pausedUser)} disconnected &mdash; waiting
-              up to a minute to reconnect. cards and the board stay put.
+              {engine.pausedUsers.map((u) => client.nameOf(u)).join(", ")}{" "}
+              disconnected &mdash; waiting up to a minute to reconnect. cards
+              and the board stay put.
             </div>
           ) : null}
           <div className="table">

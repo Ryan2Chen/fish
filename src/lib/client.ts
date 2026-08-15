@@ -205,7 +205,7 @@ export class Client {
     this.engine.chooser = data.chooser;
 
     this.engine.paused = data.paused;
-    this.engine.pausedUser = data.pausedUser;
+    this.engine.pausedUsers = data.pausedUsers;
 
     this.engine.chips = data.chips;
 
@@ -380,10 +380,14 @@ export class Client {
         this.engine.pause(event.user);
         this.log.push(`${this.nameOf(event.user)} disconnected, game paused`);
         break;
-      case "unpause":
-        this.engine.unpause();
-        this.log.push("game resumed");
+      case "unpause": {
+        const name = this.nameOf(event.user);
+        this.engine.unpause(event.user);
+        this.log.push(
+          this.engine.paused ? `${name} reconnected` : `${name} reconnected, game resumed`
+        );
         break;
+      }
       case "adminReset":
         this.engine.adminReset(event.user);
         this.log = [];

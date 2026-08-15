@@ -78,7 +78,7 @@ describe("Disconnect / reconnect", () => {
     onceEventType(clients[0], "pause", (event) => {
       event.user.should.equal("b-token");
       clients[0].engine.paused.should.equal(true);
-      clients[0].engine.pausedUser.should.equal("b-token");
+      clients[0].engine.pausedUsers.should.deep.equal(["b-token"]);
       done();
     });
     clients[1].socket.disconnect();
@@ -208,5 +208,100 @@ describe("Mid-game seat takeover", () => {
       }
     };
     takeover.connect();
+  });
+});
+
+// regression test for a real bug: pausedUser used to be a single field, so
+// a second disconnect overwrote tracking of the first, and that second
+// user's reconnect alone would wrongly clear "paused" while the first
+// user was still gone. The game would then look fully resumed until the
+// first user's own timeout silently removed their seat later, mid-hand --
+// this is what a live game "randomly resetting" on disconnect looked like.
+describe("Concurrent disconnects", () => {
+  const DISCONNECT_MS = 5000; // long enough that neither timer fires mid-test
+  let clients: Client[] = [],
+    server,
+    http,
+    url;
+
+  const onceEventType = (client: Client, type: string, cb: (event: any) => void) => {
+    const handler = (event) => {
+      if (event.type !== type) return;
+      client.socket.off("event", handler);
+      cb(event);
+    };
+    client.socket.on("event", handler);
+  };
+
+  before((done) => {
+    http = createServer();
+    server = new Server(http, DISCONNECT_MS);
+    http.listen(() => {
+      const port = (http.address() as any).port;
+      url = `http://localhost:${port}`;
+
+      let started = false;
+      const maybeSeatAll = () => {
+        if (started) return;
+        if (!clients.every((c) => c.identity !== null)) return;
+        started = true;
+        for (let i = 0; i < 6; i++) {
+          clients[i].attempt({ type: "seatAt", user: clients[i].identity.id, seat: i });
+        }
+      };
+
+      let seated = 0;
+      ["a", "b", "c", "d", "e", "f"].forEach((name, i) => {
+        const client = new Client(url, "concurrent" as any, name, `${name}-token` as any);
+        client.onUpdate = () => {
+          maybeSeatAll();
+          if (client === clients[0] && seated < 6) {
+            const s = clients[0].engine?.seats.filter((s) => clients[0].engine.userOf[s] !== null).length ?? 0;
+            if (s === 6) {
+              seated = 6;
+              done();
+            }
+          }
+        };
+        clients.push(client);
+        client.connect();
+      });
+    });
+  });
+
+  after(() => {
+    for (const client of clients) client.socket.disconnect();
+    server.socket.close();
+    http.close();
+  });
+
+  it("stays paused if a second disconnected player reconnects while the first is still out", (done) => {
+    onceEventType(clients[0], "pause", (event) => {
+      event.user.should.equal("b-token");
+      clients[0].engine.paused.should.equal(true);
+
+      // b (seat 1) is now disconnected; c (seat 2) disconnects too, then
+      // reconnects, while b is still gone
+      onceEventType(clients[0], "pause", (event2) => {
+        event2.user.should.equal("c-token");
+        clients[0].engine.pausedUsers.should.have.members(["b-token", "c-token"]);
+
+        onceEventType(clients[0], "unpause", (event3) => {
+          event3.user.should.equal("c-token");
+
+          // the bug: this used to become false here, even though b never reconnected
+          clients[0].engine.paused.should.equal(true);
+          clients[0].engine.pausedUsers.should.deep.equal(["b-token"]);
+          done();
+        });
+
+        clients[2] = new Client(url, "concurrent" as any, "c", "c-token" as any);
+        clients[2].connect();
+      });
+
+      clients[2].socket.disconnect();
+    });
+
+    clients[1].socket.disconnect();
   });
 });

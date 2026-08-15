@@ -122,6 +122,7 @@ export namespace Protocol {
 
   export type Unpause = {
     type: "unpause";
+    user: UserID;
   };
 
   export type AdminReset = {

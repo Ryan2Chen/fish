@@ -129,8 +129,8 @@ export class Room {
 
     this.disconnectTimers[user.id] = setTimeout(() => {
       delete this.disconnectTimers[user.id];
-      this.engine.unpause();
-      this.event({ type: "unpause" });
+      this.engine.unpause(user.id);
+      this.event({ type: "unpause", user: user.id });
       this.leave(user);
     }, this.disconnectTimeoutMs);
   }
@@ -148,9 +148,9 @@ export class Room {
       clearTimeout(timer);
       delete this.disconnectTimers[user.id];
     }
-    if (this.engine.paused && this.engine.pausedUser === user.id) {
-      this.engine.unpause();
-      this.event({ type: "unpause" });
+    if (this.engine.pausedUsers.includes(user.id)) {
+      this.engine.unpause(user.id);
+      this.event({ type: "unpause", user: user.id });
     }
   }
 
