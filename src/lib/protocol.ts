@@ -123,6 +123,14 @@ export namespace Protocol {
     user: UserID;
   };
 
+  export type PlaceBet = {
+    type: "placeBet";
+    user: UserID;
+    category: C.BetCategory;
+    pick: number;
+    amount: number;
+  };
+
   export type Event =
     | AddUser
     | SeatAt
@@ -142,5 +150,6 @@ export namespace Protocol {
     | AssignTurn
     | Pause
     | Unpause
-    | AdminReset;
+    | AdminReset
+    | PlaceBet;
 }

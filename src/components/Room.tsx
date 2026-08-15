@@ -3,6 +3,7 @@ import { withRouter } from "react-router-dom";
 import { RouteComponentProps } from "react-router";
 
 import { Action } from "components/Action";
+import { Bet } from "components/Bet";
 import { CardAnim } from "components/CardAnim";
 import { CardArea } from "components/CardArea";
 import { Chat } from "components/Chat";
@@ -133,6 +134,7 @@ class Room extends React.Component<Room.Props, Room.State> {
         <>
           {engine.winner !== null ? <EndScreen client={client} /> : null}
           <Config client={client} />
+          {engine.numSeated === engine.rules.numPlayers ? <Bet client={client} /> : null}
         </>
       );
     }

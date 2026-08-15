@@ -252,6 +252,17 @@ export class Room {
         if (result instanceof C.Error) return error(result.msg);
         break;
       }
+      case "placeBet": {
+        if (user.id !== event.user) return error("bad user");
+        result = this.engine.placeBet(
+          event.user,
+          event.category,
+          event.pick,
+          event.amount
+        );
+        if (result instanceof C.Error) return error(result.msg);
+        break;
+      }
     }
 
     this.event(event);

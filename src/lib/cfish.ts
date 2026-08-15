@@ -45,6 +45,25 @@ export namespace CFish {
     EVERYTHING,
   }
 
+  // side bets, placed during WAIT and resolved once the next hand ends.
+  // "winner" picks a Team, "mostSnipes"/"mostStolen" pick a SeatID -- pick
+  // is just a number either way, interpreted per category
+  export enum BetCategory {
+    WINNER,
+    MOST_SNIPES,
+    MOST_STOLEN,
+  }
+
+  export type Bet = {
+    user: UserID;
+    category: BetCategory;
+    pick: number;
+    amount: number;
+  };
+
+  // a settled bet, kept around for the next end screen to show
+  export type BetResult = Bet & { correct: boolean; payout: number };
+
   // one seat's running totals for the current hand
   export type SeatStats = {
     cardsWon: number; // successful asks made (cards taken from someone else)
@@ -148,6 +167,11 @@ export class Data {
 
   // chip balance per user; persists across games in the same room
   chips: Record<UserID, number> = {} as any;
+
+  // pending side bets, placed during WAIT; resolved (and cleared into
+  // lastBetResults) once the hand that follows ends
+  bets: CFish.Bet[] = [];
+  lastBetResults: CFish.BetResult[] = [];
 
   // the last response
   lastResponse:
@@ -370,6 +394,9 @@ export class Engine extends Data {
     res.activeTimerSeat = this.activeTimerSeat;
     res.activeSince = this.activeSince;
     res.usedMs = this.usedMs;
+
+    res.bets = this.bets;
+    res.lastBetResults = this.lastBetResults;
 
     return res;
   }
@@ -684,6 +711,7 @@ export class Engine extends Data {
     if (this.allSuitsDeclared) {
       this.phase = CFish.Phase.WAIT;
       this.settleChips(this.winner);
+      this.settleBets();
     } else if (correct && this.teamOf(this.asker) === team) {
       // the declaring team already holds the turn, so there's no future
       // transfer for the bonus to wait for -- spend it immediately instead
@@ -733,6 +761,81 @@ export class Engine extends Data {
     }
   }
 
+  // any phase -> itself
+  // side bet on the outcome of the hand currently in progress; only open
+  // during WAIT (between hands), so no one's betting with inside info
+  placeBet(
+    user: UserID,
+    category: CFish.BetCategory,
+    pick: number,
+    amount: number
+  ): CFish.Result {
+    if (this.phase !== CFish.Phase.WAIT) return new CFish.Error("bad phase");
+    if (!Number.isFinite(amount) || amount <= 0)
+      return new CFish.Error("bad amount");
+    if ((this.chips[user] ?? 0) < amount)
+      return new CFish.Error("not enough chips");
+    if (this.bets.some((bet) => bet.user === user && bet.category === category))
+      return new CFish.Error("already bet that category this hand");
+
+    this.chips[user] -= amount; // held until the bet resolves or is refunded
+    this.bets.push({ user, category, pick, amount });
+  }
+
+  private actualOutcomeFor(category: CFish.BetCategory): number {
+    const seated = this.seats.filter((seat) => this.userOf[seat] !== null);
+    switch (category) {
+      case CFish.BetCategory.WINNER:
+        return this.winner as number;
+      case CFish.BetCategory.MOST_SNIPES:
+        return seated.reduce((best, seat) =>
+          this.stats[seat].cardsWon > this.stats[best].cardsWon ? seat : best
+        );
+      case CFish.BetCategory.MOST_STOLEN:
+        return seated.reduce((best, seat) =>
+          this.stats[seat].cardsLost > this.stats[best].cardsLost ? seat : best
+        );
+    }
+  }
+
+  // pari-mutuel: correct bettors split the whole category's pool (their
+  // own stake plus every wrong bettor's) proportional to their stake; if
+  // no one guessed right, everyone just gets their stake back. zero-sum
+  // among the bettors -- there's no house edge
+  private settleBets(): void {
+    const results: CFish.BetResult[] = [];
+
+    for (const category of [
+      CFish.BetCategory.WINNER,
+      CFish.BetCategory.MOST_SNIPES,
+      CFish.BetCategory.MOST_STOLEN,
+    ]) {
+      const inCategory = this.bets.filter((bet) => bet.category === category);
+      if (inCategory.length === 0) continue;
+
+      const actual = this.actualOutcomeFor(category);
+      const pool = inCategory.reduce((sum, bet) => sum + bet.amount, 0);
+      const correctPool = inCategory
+        .filter((bet) => bet.pick === actual)
+        .reduce((sum, bet) => sum + bet.amount, 0);
+
+      for (const bet of inCategory) {
+        const correct = bet.pick === actual;
+        const payout =
+          correctPool === 0
+            ? bet.amount // no one guessed right -- refund the stake
+            : correct
+            ? Math.round((bet.amount / correctPool) * pool)
+            : 0;
+        this.chips[bet.user] = (this.chips[bet.user] ?? 0) + payout;
+        results.push({ ...bet, correct, payout });
+      }
+    }
+
+    this.lastBetResults = results;
+    this.bets = [];
+  }
+
   // PASS -> ASK
   pass(passer: SeatID, next: SeatID): CFish.Result {
     if (this.phase !== CFish.Phase.PASS) return new CFish.Error("bad phase");
@@ -772,6 +875,13 @@ export class Engine extends Data {
     this.activeTimerSeat = null;
     this.activeSince = null;
     this.usedMs = {} as any;
+
+    // the hand's being aborted, not resolved -- refund pending bets rather
+    // than settling them against an outcome that never actually happened
+    for (const bet of this.bets) {
+      this.chips[bet.user] = (this.chips[bet.user] ?? 0) + bet.amount;
+    }
+    this.bets = [];
   }
 
   // debug

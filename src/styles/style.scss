@@ -861,6 +861,57 @@ $rotj: 90;
   }
 }
 
+.bet {
+  background: var(--gray-0);
+  border-radius: 0.6rem;
+  box-shadow: var(--shadow);
+  font-size: 0.8rem;
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.8rem;
+  text-align: center;
+  width: 100%;
+
+  .title {
+    color: var(--gray-600);
+    font-family: "Baloo 2", sans-serif;
+    margin-bottom: 0.4rem;
+  }
+
+  form {
+    align-items: center;
+    display: flex;
+    gap: 0.3rem;
+    justify-content: center;
+
+    input {
+      width: 3.5rem;
+    }
+  }
+
+  .pendingBets,
+  .betResults {
+    list-style: none;
+    margin: 0.4rem 0 0;
+    padding: 0;
+
+    li {
+      color: var(--gray-500);
+    }
+
+    li.correct {
+      color: var(--team-first);
+    }
+
+    li.wrong {
+      color: var(--gray-500);
+    }
+
+    li.refund {
+      color: var(--gray-600);
+    }
+  }
+}
+
 .config {
   display: flex;
   flex-direction: row;

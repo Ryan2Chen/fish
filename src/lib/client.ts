@@ -215,6 +215,9 @@ export class Client {
     this.engine.activeSince = data.activeSince;
     this.engine.usedMs = data.usedMs;
 
+    this.engine.bets = data.bets;
+    this.engine.lastBetResults = data.lastBetResults;
+
     this.onUpdate?.(this);
   }
 
@@ -380,6 +383,10 @@ export class Client {
         this.lastAsk = null;
         this.log.push(`${this.nameOf(event.user)} reset the game`);
         break;
+      case "placeBet":
+        this.engine.placeBet(event.user, event.category, event.pick, event.amount);
+        this.log.push(`${this.nameOf(event.user)} placed a bet`);
+        break;
     }
     this.onUpdate?.(this);
   }
@@ -513,6 +520,16 @@ export class Client {
     return this.attempt({
       type: "adminReset",
       user: this.engine.identity,
+    });
+  }
+
+  placeBet(category: C.BetCategory, pick: number, amount: number): void {
+    return this.attempt({
+      type: "placeBet",
+      user: this.engine.identity,
+      category,
+      pick,
+      amount,
     });
   }
 }

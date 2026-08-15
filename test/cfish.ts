@@ -565,6 +565,103 @@ describe("Engine chip settlement", () => {
   });
 });
 
+describe("Engine betting", () => {
+  let engine;
+
+  beforeEach(() => {
+    engine = new Engine(CFish.defaultRules); // startingChips: 100
+    ["a", "b", "c", "d", "e", "f"].forEach((user, seat) => {
+      engine.addUser(user);
+      engine.seatAt(user, seat);
+    });
+  });
+
+  it("rejects bets outside the WAIT phase", () => {
+    engine.startGame("a", false);
+    engine
+      .placeBet("a", CFish.BetCategory.WINNER, CFish.Team.FIRST, 10)
+      .should.be.instanceOf(CFish.Error);
+  });
+
+  it("rejects a bet bigger than the bettor's chip balance", () => {
+    engine
+      .placeBet("a", CFish.BetCategory.WINNER, CFish.Team.FIRST, 1000)
+      .should.be.instanceOf(CFish.Error);
+  });
+
+  it("rejects a second bet in the same category", () => {
+    engine.placeBet("a", CFish.BetCategory.WINNER, CFish.Team.FIRST, 10);
+    engine
+      .placeBet("a", CFish.BetCategory.WINNER, CFish.Team.SECOND, 10)
+      .should.be.instanceOf(CFish.Error);
+  });
+
+  it("holds the stake immediately, before the bet resolves", () => {
+    engine.placeBet("a", CFish.BetCategory.WINNER, CFish.Team.FIRST, 10);
+    engine.chips["a"].should.equal(90);
+  });
+
+  it("splits a category's pool among correct bettors, proportional to stake", () => {
+    engine.placeBet("a", CFish.BetCategory.WINNER, CFish.Team.FIRST, 10); // correct
+    engine.placeBet("c", CFish.BetCategory.WINNER, CFish.Team.FIRST, 30); // correct
+    engine.placeBet("b", CFish.BetCategory.WINNER, CFish.Team.SECOND, 20); // wrong
+
+    for (let i = 0; i < 6; i++) engine.declarerOf[i] = CFish.Team.FIRST;
+    for (let i = 6; i < 9; i++) engine.declarerOf[i] = CFish.Team.SECOND;
+    // team FIRST wins 6-3
+
+    engine.settleBets();
+
+    // pool = 60, correctPool = 40 -- a: round(10/40*60)=15, c: round(30/40*60)=45
+    engine.chips["a"].should.equal(100 - 10 + 15);
+    engine.chips["c"].should.equal(100 - 30 + 45);
+    engine.chips["b"].should.equal(100 - 20);
+
+    engine.lastBetResults.length.should.equal(3);
+    engine.bets.length.should.equal(0);
+  });
+
+  it("refunds everyone in a category if no one guessed right", () => {
+    engine.placeBet("a", CFish.BetCategory.WINNER, CFish.Team.SECOND, 10);
+    engine.placeBet("b", CFish.BetCategory.WINNER, CFish.Team.SECOND, 20);
+
+    for (let i = 0; i < 6; i++) engine.declarerOf[i] = CFish.Team.FIRST;
+    for (let i = 6; i < 9; i++) engine.declarerOf[i] = CFish.Team.SECOND;
+
+    engine.settleBets();
+
+    engine.chips["a"].should.equal(100);
+    engine.chips["b"].should.equal(100);
+  });
+
+  it("resolves mostSnipes/mostStolen bets against actual per-seat stats", () => {
+    engine.stats = {};
+    for (const seat of engine.seats) engine.stats[seat] = CFish.emptySeatStats();
+    engine.stats[1].cardsWon = 5;
+    engine.stats[3].cardsLost = 4;
+
+    engine.placeBet("a", CFish.BetCategory.MOST_SNIPES, 1, 10);
+    engine.placeBet("c", CFish.BetCategory.MOST_STOLEN, 3, 10);
+    for (let i = 0; i < 9; i++) engine.declarerOf[i] = CFish.Team.FIRST;
+
+    engine.settleBets();
+
+    // sole bettor in each category and correct -- gets their own stake back
+    engine.chips["a"].should.equal(100);
+    engine.chips["c"].should.equal(100);
+  });
+
+  it("refunds pending bets on adminReset instead of settling them", () => {
+    engine.placeBet("a", CFish.BetCategory.WINNER, CFish.Team.FIRST, 15);
+    engine.chips["a"].should.equal(85);
+
+    engine.adminReset("a");
+
+    engine.chips["a"].should.equal(100);
+    engine.bets.length.should.equal(0);
+  });
+});
+
 describe("Engine admin reset", () => {
   let engine;
 
