@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { usePopper } from "react-popper";
 
-import { Emote } from "components/Emote";
 import { LogItem } from "components/Log";
 import { SuitSelector } from "components/SuitSelector";
 import { Card, fishSuitToString } from "lib/cards";
@@ -176,10 +175,7 @@ export class Action extends React.Component<Action.Props, Action.State> {
 
     if (
       engine.ownSeat === null ||
-      (engine.phase !== C.Phase.ASK && engine.phase !== C.Phase.PASS) ||
-      (engine.rules.declare === C.DeclareRule.DURING_TURN &&
-        engine.ownSeat !== engine.asker &&
-        engine.handSize[engine.asker] !== 0)
+      (engine.phase !== C.Phase.ASK && engine.phase !== C.Phase.PASS)
     )
       return null;
 
@@ -232,7 +228,6 @@ export class Action extends React.Component<Action.Props, Action.State> {
           sortBtn={this.renderSortButton()}
           suitSelector={(update) => this.renderSuitSelector(update)}
         />
-        <Emote client={client} />
       </div>
     );
   }

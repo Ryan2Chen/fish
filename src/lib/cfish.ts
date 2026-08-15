@@ -20,18 +20,6 @@ export namespace CFish {
     SECOND,
   }
 
-  // can we ask for our own card?
-  export enum BluffRule {
-    NO,
-    YES,
-  }
-
-  // can we declare during any ask phase?
-  export enum DeclareRule {
-    DURING_ASK,
-    DURING_TURN,
-  }
-
   // who knows hand sizes?
   export enum HandSizeRule {
     PUBLIC,
@@ -83,8 +71,6 @@ export namespace CFish {
 
   export type Rules = {
     numPlayers: number;
-    bluff: BluffRule;
-    declare: DeclareRule;
     handSize: HandSizeRule;
     log: LogRule;
     // chips each player antes per game; winners take buyIn * numPlayers *
@@ -100,8 +86,6 @@ export namespace CFish {
 
   export const defaultRules: Rules = {
     numPlayers: 6,
-    bluff: BluffRule.NO,
-    declare: DeclareRule.DURING_ASK,
     handSize: HandSizeRule.PUBLIC,
     log: LogRule.LAST_ACTION,
     buyIn: 10,
@@ -554,11 +538,7 @@ export class Engine extends Data {
       !this.handOf[asker].hasSuit(card.fishSuit)
     )
       return new CFish.Error("hand doesn't have suit");
-    if (
-      this.handOf[asker] !== null &&
-      this.rules.bluff === CFish.BluffRule.NO &&
-      this.handOf[asker].includes(card)
-    )
+    if (this.handOf[asker] !== null && this.handOf[asker].includes(card))
       return new CFish.Error("hand has asked card");
 
     this.askee = askee;
@@ -647,12 +627,6 @@ export class Engine extends Data {
       return new CFish.Error("bad phase");
     if (this.declarerOf[declaredSuit] !== undefined)
       return new CFish.Error("suit declared");
-    if (
-      this.rules.declare === CFish.DeclareRule.DURING_TURN &&
-      this.asker !== declarer &&
-      this.handSize[this.asker] !== 0
-    )
-      return new CFish.Error("declaring out of turn");
 
     this.declarer = declarer;
     this.declaredSuit = declaredSuit;

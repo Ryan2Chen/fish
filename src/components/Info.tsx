@@ -24,6 +24,7 @@ export namespace Info {
   };
 
   export type State = {
+    avatarPickerOpen: boolean;
     nameInput: string;
     renaming: boolean;
     tick: number;
@@ -37,6 +38,7 @@ export class Info extends React.Component<Info.Props, Info.State> {
     super(props);
 
     this.state = {
+      avatarPickerOpen: false,
       nameInput: "",
       renaming: false,
       tick: 0,
@@ -114,7 +116,10 @@ export class Info extends React.Component<Info.Props, Info.State> {
           <button
             className="avatarOption"
             key={id}
-            onClick={(e) => client.attemptSetAvatar(id)}
+            onClick={(e) => {
+              client.attemptSetAvatar(id);
+              this.setState({ avatarPickerOpen: false });
+            }}
           >
             <Avatar id={id} size={22} />
           </button>
@@ -147,7 +152,6 @@ export class Info extends React.Component<Info.Props, Info.State> {
             </li>
           ))}
         </ul>
-        <p>members:</p>
         <ul>
           {engine.seats
             .filter((seat) => engine.teamOf(seat) === team)
@@ -184,7 +188,18 @@ export class Info extends React.Component<Info.Props, Info.State> {
 
     return (
       <li key={user.id}>
-        <Avatar id={user.avatar} size={20} />
+        {isSelf ? (
+          <button
+            className="avatarSelf"
+            onClick={(e) =>
+              this.setState({ avatarPickerOpen: !this.state.avatarPickerOpen })
+            }
+          >
+            <Avatar id={user.avatar} size={20} />
+          </button>
+        ) : (
+          <Avatar id={user.avatar} size={20} />
+        )}
         <span className="playerName">
           {host ? <span className="adminBadge">★</span> : null}
           {user.name}
@@ -193,7 +208,7 @@ export class Info extends React.Component<Info.Props, Info.State> {
           <button onClick={(e) => this.startRename(user.name)}>rename</button>
         ) : null}
         {isSelf && this.state.renaming ? this.renderRenameForm() : null}
-        {isSelf ? this.renderAvatarPicker() : null}
+        {isSelf && this.state.avatarPickerOpen ? this.renderAvatarPicker() : null}
       </li>
     );
   }

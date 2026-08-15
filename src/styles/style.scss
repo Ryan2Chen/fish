@@ -39,14 +39,13 @@ body {
 }
 
 button,
-.option,
 .cardFrame .card,
 .declareArea .declareInner,
 .cardSelector,
 .suitSelector,
 .info,
 .log,
-.playerInt.active {
+.playerInt {
   border-radius: 0.6rem;
 }
 
@@ -346,6 +345,17 @@ input[type="text"] {
   gap: 0.3rem;
 }
 
+.avatarSelf {
+  background: transparent;
+  height: auto;
+  padding: 0.1rem;
+  vertical-align: middle;
+
+  &:hover {
+    background: var(--gray-200);
+  }
+}
+
 .avatarPicker {
   display: flex;
   flex-wrap: wrap;
@@ -380,6 +390,7 @@ input[type="text"] {
 .chat {
   display: flex;
   flex-direction: column;
+  padding-bottom: 1.5rem;
 
   // a hard height on the list itself, rather than "flex: 1" against a
   // max-height on the container -- flex-basis sizing here was unreliable
@@ -412,7 +423,7 @@ input[type="text"] {
 // table
 
 .table {
-  margin: 2rem 3rem;
+  margin: 4rem 3rem 2rem;
   position: relative;
 }
 
@@ -483,6 +494,7 @@ input[type="text"] {
 
 .playerInt {
   align-items: center;
+  background: var(--gray-0);
   border: 0.15rem solid var(--team-color, transparent);
   display: flex;
   flex-direction: column;
@@ -497,9 +509,19 @@ input[type="text"] {
   }
 
   &.active {
-    background: var(--gray-0);
     filter: drop-shadow(0 0 6px var(--accent));
   }
+}
+
+.avatarRow {
+  align-items: center;
+  display: flex;
+  gap: 0.15rem;
+}
+
+.selfEmoteWrap {
+  align-items: center;
+  display: flex;
 }
 
 @keyframes emotePop {
@@ -531,24 +553,135 @@ input[type="text"] {
   z-index: 5;
 }
 
+.chatBubble {
+  --bubble-bg: var(--gray-0);
+  background: var(--bubble-bg);
+  // smaller than the usual 0.6rem shared elsewhere: a single-line bubble is
+  // only ~24px tall, and a bigger radius eats so much of its side edges
+  // that there's barely a flat spot left for the tail to attach to without
+  // clipping under the corner curve
+  border-radius: 0.35rem;
+  box-shadow: var(--shadow);
+  color: var(--gray-900);
+  font-size: 0.75rem;
+  max-width: 9rem;
+  overflow-wrap: break-word;
+  padding: 0.3rem 0.5rem;
+  // position/top/left come from the popper instance (anchored to the
+  // avatar icon) via inline style; width must be explicit because an
+  // absolutely positioned popper element has no natural available width
+  // to shrink-to-fit against, which otherwise collapses text to one
+  // word per line
+  width: max-content;
+  z-index: 5;
+
+  &.team-0 {
+    --bubble-bg: var(--team-first);
+  }
+
+  &.team-1 {
+    --bubble-bg: var(--team-second);
+  }
+
+  // long tail sweeping up toward the avatar -- width is the tail's length,
+  // height is its thickness. chatBubbleTailAnchor's position (top) comes
+  // from popper's arrow modifier via inline style, which keeps it
+  // correctly attached even as the bubble's height changes (multi-line
+  // wraps) or placement flips near a table edge. The rotation lives on the
+  // nested chatBubbleTail instead of the anchor itself, because popper's
+  // inline style also sets its own `transform` (a translate) on the
+  // anchor, which would otherwise clobber a CSS rotation on that element.
+  .chatBubbleTailAnchor {
+    // deliberately no background here -- this box is an unclipped
+    // rectangle, so painting it would show as a hard-edged box behind the
+    // triangular chatBubbleTail. It just carries position from popper.
+    // Thinner than before so it comfortably fits within the bubble's flat
+    // edge (outside the rounded corners) even on a single-line message.
+    // Shorter than before too: at a 32px length, with only a ~4px gap
+    // between the bubble and the avatar, the tip overshot past the whole
+    // avatar and landed on the emote icon next to it instead -- this
+    // length is calibrated to land within the avatar itself.
+    height: 0.45rem;
+    width: 1rem;
+  }
+
+  .chatBubbleTail {
+    // custom properties cascade through chatBubbleTailAnchor automatically
+    // even though that element has no background of its own, unlike plain
+    // `background: inherit` which only looks at the direct parent
+    background: var(--bubble-bg);
+    height: 100%;
+    width: 100%;
+  }
+
+  &.left {
+    .chatBubbleTailAnchor {
+      // 100% would touch the bubble's edge exactly, but rotating the tail
+      // (below) pulls part of its base off that edge -- pulling the whole
+      // anchor a few px *into* the bubble means even the receded part of
+      // the rotated base still lands under the bubble's opaque body. This
+      // is a local overlap relative to the bubble's own edge, unlike the
+      // popper offset distance, which moves the bubble+tail together as
+      // one rigid unit and can't change their relative geometry at all.
+      left: calc(100% - 4px);
+    }
+
+    .chatBubbleTail {
+      clip-path: polygon(0 0, 0 100%, 100% 50%);
+      transform: rotate(23deg);
+      transform-origin: 0 50%;
+    }
+  }
+
+  &.right {
+    .chatBubbleTailAnchor {
+      right: calc(100% - 4px);
+    }
+
+    .chatBubbleTail {
+      clip-path: polygon(100% 0, 100% 100%, 0 50%);
+      transform: rotate(-23deg);
+      transform-origin: 100% 50%;
+    }
+  }
+}
+
 .emotePicker {
+  display: inline-flex;
   position: relative;
 
-  .emoteOptions {
-    background: var(--gray-0);
-    border-radius: 0.6rem;
-    box-shadow: var(--shadow);
+  .emoteTrigger {
+    align-items: center;
+    background: transparent;
+    color: var(--gray-600);
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.2rem;
-    max-width: 10rem;
-    padding: 0.3rem;
-    z-index: 20;
+    height: auto;
+    padding: 0.1rem;
 
-    button {
-      font-size: 1.1rem;
-      padding: 0.1em 0.3em 0;
+    &:hover {
+      background: var(--gray-200);
+      color: var(--gray-900);
     }
+  }
+}
+
+// portaled to document.body (see Emote.tsx) so it always renders on top,
+// regardless of any stacking context a player box's ancestors create
+// (e.g. the active-player glow uses `filter`, which traps z-index of
+// normal descendants) -- this can no longer be nested under .emotePicker
+// since it's no longer a DOM descendant of it once portaled
+.emoteOptions {
+  background: var(--gray-0);
+  border-radius: 0.6rem;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.3rem;
+  z-index: 1000;
+
+  button {
+    font-size: 1.1rem;
+    padding: 0.1em 0.3em 0;
   }
 }
 
@@ -883,73 +1016,105 @@ $rotj: 90;
   }
 }
 
-.config {
+// gear button that opens the settings modal -- fixed to the viewport so it
+// sits in the top-right corner regardless of where Config mounts in the
+// tree; only rendered pre-game for the host (see Config.tsx)
+.configGear {
+  align-items: center;
+  background: var(--gray-0);
+  border: 2px solid var(--gray-300);
+  border-radius: 50%;
+  box-shadow: var(--shadow);
+  color: var(--gray-600);
   display: flex;
-  flex-direction: row;
+  height: 2.4rem;
+  justify-content: center;
+  padding: 0;
+  position: fixed;
+  right: 0.75rem;
+  top: 0.75rem;
+  width: 2.4rem;
+  z-index: 20;
 
-  &.disabled {
-    pointer-events: none;
-
-    .option {
-      background: transparent;
-    }
-
-    button {
-      background: transparent;
-      color: transparent;
-    }
+  &:hover {
+    background: var(--gray-100);
+    color: var(--gray-900);
   }
 }
 
-.option {
+.configModalOverlay {
   align-items: center;
-  background-color: var(--gray-100);
+  background: rgba(74, 59, 92, 0.4);
+  bottom: 0;
   display: flex;
-  flex-direction: column;
   justify-content: center;
-  margin: 0 0.25rem;
-  padding: 0.5rem;
-  text-align: center;
+  left: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 30;
+}
 
-  .title {
-    margin-bottom: 0.5rem;
-  }
+.configModal {
+  background: var(--gray-0);
+  border-radius: 0.6rem;
+  box-shadow: var(--shadow);
+  min-width: 20rem;
+  padding: 1rem 1.25rem;
+}
 
-  button {
-    background: var(--gray-300);
+.configModalHeader {
+  align-items: center;
+  display: flex;
+  font-family: "Baloo 2", sans-serif;
+  font-size: 1.1rem;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+
+  .configModalClose {
+    background: transparent;
     color: var(--gray-600);
-    width: 100%;
+    font-size: 1.2rem;
+    height: 1.6rem;
+    line-height: 1;
+    padding: 0;
+    width: 1.6rem;
 
     &:hover {
-      background: var(--gray-50);
+      background: var(--gray-200);
       color: var(--gray-900);
-    }
-
-    &:disabled {
-      background: var(--gray-100);
-      color: var(--gray-900);
-
-      &:hover {
-        background: var(--gray-100);
-      }
     }
   }
 }
 
-.timerOption {
-  .timerInputs {
-    display: flex;
-    gap: 0.4rem;
-    margin-top: 0.4rem;
+.configRow {
+  align-items: center;
+  border-top: 1px solid var(--gray-200);
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 0.5rem 0;
 
-    label {
-      display: flex;
-      flex-direction: column;
-      font-size: 0.7rem;
+  select {
+    background: var(--gray-0);
+    border: 1px solid var(--gray-300);
+    border-radius: 0.4rem;
+    font: inherit;
+    padding: 0.2rem 0.4rem;
+  }
+
+  &.configSubRow {
+    border-top: none;
+    gap: 0.6rem;
+    justify-content: flex-start;
+    padding-top: 0;
+
+    .configLabel {
+      font-size: 0.75rem;
     }
 
     input {
-      width: 3.5rem;
+      width: 3.2rem;
     }
   }
 }

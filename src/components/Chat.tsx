@@ -15,11 +15,11 @@ export namespace Chat {
 
 export class Chat extends React.Component<Chat.Props, Chat.State> {
   listRef = React.createRef<HTMLUListElement>();
-  // client is mutated in place rather than replaced, so prevProps.client
-  // and this.props.client are the same object -- comparing them directly
-  // in componentDidUpdate would always see "no change". Track the count
-  // ourselves instead.
-  lastSeenLength = 0;
+  // true until the user scrolls away from the bottom on purpose
+  stickToBottom = true;
+  // client.chatLog is mutated in place, so props identity can't tell us
+  // when a message was added -- track the length we last saw ourselves
+  lastChatLength = 0;
 
   constructor(props) {
     super(props);
@@ -48,6 +48,33 @@ export class Chat extends React.Component<Chat.Props, Chat.State> {
     el.scrollTop = el.scrollHeight;
   }
 
+  componentDidMount() {
+    this.lastChatLength = this.props.client.chatLog.length;
+    this.scrollToBottom();
+  }
+
+  componentDidUpdate() {
+    const { length } = this.props.client.chatLog;
+    if (length !== this.lastChatLength) {
+      this.lastChatLength = length;
+      this.scrollToBottom();
+    }
+  }
+
+  scrollToBottom(): void {
+    const list = this.listRef.current;
+    if (!list || !this.stickToBottom) return;
+    list.scrollTop = list.scrollHeight;
+  }
+
+  onScroll(): void {
+    const list = this.listRef.current;
+    if (!list) return;
+    const distanceFromBottom =
+      list.scrollHeight - list.scrollTop - list.clientHeight;
+    this.stickToBottom = distanceFromBottom < 20;
+  }
+
   submit(e): void {
     e.preventDefault();
     e.stopPropagation();
@@ -65,7 +92,7 @@ export class Chat extends React.Component<Chat.Props, Chat.State> {
 
     return (
       <div className={`chat ${active ? "active" : ""}`}>
-        <ul ref={this.listRef}>
+        <ul onScroll={() => this.onScroll()} ref={this.listRef}>
           {chatLog.map((item, i) => (
             <li key={i}>
               <span className="playerName">{item.user.name}:</span>{" "}

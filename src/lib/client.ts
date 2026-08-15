@@ -9,6 +9,8 @@ import { RoomID, UserID } from "lib/server";
 const ANSWER_REVEAL_MS = 1800;
 // how long an emote bubble lingers over a player's avatar
 const EMOTE_MS = 2500;
+// how long a chat message preview lingers next to a player's box
+const CHAT_BUBBLE_MS = 3000;
 
 export class Client {
   engine: Engine | null = null;
@@ -22,6 +24,17 @@ export class Client {
   // emoji currently floating over a seat's avatar, cleared after EMOTE_MS
   activeEmotes: Partial<Record<SeatID, string>> = {};
   emoteTimers: Partial<Record<SeatID, ReturnType<typeof setTimeout>>> = {};
+  // bumped on every emote so the UI can force its pop animation to
+  // restart even if the same seat re-emotes before the old one clears
+  activeEmoteIds: Partial<Record<SeatID, number>> = {};
+  private emoteSeq = 0;
+
+  // most recent chat message currently previewed next to a seat's box,
+  // cleared after CHAT_BUBBLE_MS (or replaced immediately by a newer one)
+  activeChatBubbles: Partial<Record<SeatID, string>> = {};
+  activeChatBubbleIds: Partial<Record<SeatID, number>> = {};
+  chatBubbleTimers: Partial<Record<SeatID, ReturnType<typeof setTimeout>>> = {};
+  private chatBubbleSeq = 0;
 
   cardAnimHook:
     | ((asker: SeatID, askee: SeatID, askedCard: Card) => void)
@@ -154,6 +167,22 @@ export class Client {
 
   receiveChat(user: P.User, message: string): void {
     this.chatLog.push({ user, message });
+
+    const seat = this.engine?.seatOf(user.id);
+    if (seat !== null && seat !== undefined) {
+      if (this.chatBubbleTimers[seat] !== undefined) {
+        clearTimeout(this.chatBubbleTimers[seat]);
+      }
+      this.activeChatBubbles[seat] = message;
+      this.activeChatBubbleIds[seat] = ++this.chatBubbleSeq;
+      this.chatBubbleTimers[seat] = setTimeout(() => {
+        delete this.chatBubbleTimers[seat];
+        delete this.activeChatBubbles[seat];
+        delete this.activeChatBubbleIds[seat];
+        this.onUpdate?.(this);
+      }, CHAT_BUBBLE_MS);
+    }
+
     this.onUpdate?.(this);
   }
 
@@ -165,9 +194,11 @@ export class Client {
       clearTimeout(this.emoteTimers[seat]);
     }
     this.activeEmotes[seat] = emoji;
+    this.activeEmoteIds[seat] = ++this.emoteSeq;
     this.emoteTimers[seat] = setTimeout(() => {
       delete this.emoteTimers[seat];
       delete this.activeEmotes[seat];
+      delete this.activeEmoteIds[seat];
       this.onUpdate?.(this);
     }, EMOTE_MS);
     this.onUpdate?.(this);
