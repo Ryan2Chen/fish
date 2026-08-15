@@ -381,10 +381,15 @@ input[type="text"] {
   display: flex;
   flex-direction: column;
 
+  // a hard height on the list itself, rather than "flex: 1" against a
+  // max-height on the container -- flex-basis sizing here was unreliable
+  // (the list kept growing past its box and overlapping the send button
+  // instead of scrolling), so this sidesteps that entirely
   ul {
-    flex: 1;
+    height: 10rem;
     list-style: none;
     margin: 0.5rem 0;
+    overflow-x: hidden;
     overflow-y: scroll;
     padding: 0;
 
@@ -400,42 +405,6 @@ input[type="text"] {
     input {
       flex: 1;
       min-width: 0;
-    }
-  }
-}
-
-@media screen and (max-width: 750px) {
-  .room {
-    display: flex;
-  }
-
-  .toggles {
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    top: 0;
-    left: 0;
-
-    &.active {
-      left: 17rem;
-    }
-  }
-
-  .info,
-  .log,
-  .chat {
-    background: var(--gray-0);
-    box-shadow: var(--shadow);
-    bottom: 0;
-    display: none;
-    left: 0;
-    padding: 1rem;
-    position: absolute;
-    top: 0;
-    width: 15rem;
-
-    &.active {
-      display: flex;
     }
   }
 }
@@ -570,7 +539,9 @@ input[type="text"] {
     border-radius: 0.6rem;
     box-shadow: var(--shadow);
     display: flex;
+    flex-wrap: wrap;
     gap: 0.2rem;
+    max-width: 10rem;
     padding: 0.3rem;
     z-index: 20;
 
@@ -1199,5 +1170,97 @@ $rotj: 90;
 
   .suit {
     font-family: "Noto Sans JP";
+  }
+}
+
+// mobile: kept at the end of the file so these overrides win the cascade
+// against the desktop rules above (same specificity, later wins)
+@media screen and (max-width: 750px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  // fixed-position and was overlapping (and intercepting clicks on) the
+  // now-always-visible chat's send button at the bottom of the screen
+  .andoverBadge {
+    display: none;
+  }
+
+  .room {
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+  }
+
+  .game {
+    width: 100vw;
+  }
+
+  // always visible (see Room.tsx) -- a fixed, modest strip at the bottom
+  // instead of the info/log toggle-overlay treatment, so it reads like a
+  // poker table's always-on chat rather than something you have to open
+  .chat {
+    background: var(--gray-0);
+    border-top: 1px solid var(--gray-200);
+    box-shadow: var(--shadow);
+    box-sizing: border-box;
+    padding: 0.5rem;
+    // no explicit width -- .room is a column flex container, so .chat
+    // stretches to the full cross-axis width on its own; an explicit
+    // 100vw here double-counted with padding and overflowed the viewport
+    ul {
+      height: 6rem;
+    }
+  }
+
+  // the table's absolute-positioned seats are sized for desktop and would
+  // overflow a phone's width; scale the whole thing down uniformly rather
+  // than rework the rem-based rotation math. transform doesn't shrink the
+  // layout box it reserves, so pull the next element up to close the gap.
+  // the top margin also clears the "show info"/"show chat" toggle buttons
+  // pinned to the top-left corner.
+  .table {
+    margin: 2.5rem 0 -7.5rem;
+    transform: scale(0.62);
+    transform-origin: top center;
+  }
+
+  .config,
+  .bet form {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .statsTable {
+    font-size: 0.7rem;
+  }
+
+  .toggles {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    &.active {
+      left: 17rem;
+    }
+  }
+
+  .info,
+  .log {
+    background: var(--gray-0);
+    box-shadow: var(--shadow);
+    bottom: 0;
+    display: none;
+    left: 0;
+    padding: 1rem;
+    position: absolute;
+    top: 0;
+    width: 15rem;
+
+    &.active {
+      display: flex;
+    }
   }
 }

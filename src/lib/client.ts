@@ -236,6 +236,13 @@ export class Client {
       case "unseatAt":
         this.engine.unseatAt(event.seat);
         break;
+      case "swapSeats": {
+        const nameA = this.nameOf(event.seatA);
+        const nameB = this.nameOf(event.seatB);
+        this.engine.swapSeats(event.seatA, event.seatB);
+        this.log.push(`${nameA} and ${nameB} swapped seats`);
+        break;
+      }
       case "removeUser":
         this.engine.removeUser(event.user);
         break;
@@ -426,6 +433,14 @@ export class Client {
     return this.attempt({
       type: "unseatAt",
       seat: this.engine.ownSeat,
+    });
+  }
+
+  swapSeats(otherSeat: SeatID): void {
+    return this.attempt({
+      type: "swapSeats",
+      seatA: this.engine.ownSeat,
+      seatB: otherSeat,
     });
   }
 

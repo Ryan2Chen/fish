@@ -34,7 +34,7 @@ export namespace Room {
     name?: string | null;
     nameInput?: string;
     room?: string;
-    sidebar?: "closed" | "info" | "log" | "chat";
+    sidebar?: "closed" | "info" | "log";
   };
 }
 
@@ -142,7 +142,7 @@ class Room extends React.Component<Room.Props, Room.State> {
     return null;
   }
 
-  renderToggle(pane: "info" | "log" | "chat") {
+  renderToggle(pane: "info" | "log") {
     const { client, sidebar } = this.state;
     const { engine } = client;
     const label = sidebar !== pane ? `show ${pane}` : `hide ${pane}`;
@@ -162,7 +162,9 @@ class Room extends React.Component<Room.Props, Room.State> {
       <>
         <Info active={sidebar === "info"} client={client} lone={false} />
         {logvis ? <Log active={sidebar === "log"} client={client} /> : null}
-        <Chat active={sidebar === "chat"} client={client} />
+        {/* always visible, not gated behind a toggle -- like a poker
+            table's chat, you shouldn't have to open it every time */}
+        <Chat active client={client} />
         <div
           className={`toggles ${
             this.state.sidebar === "closed" ? "" : "active"
@@ -170,7 +172,6 @@ class Room extends React.Component<Room.Props, Room.State> {
         >
           {this.renderToggle("info")}
           {logvis ? this.renderToggle("log") : null}
-          {this.renderToggle("chat")}
         </div>
       </>
     );

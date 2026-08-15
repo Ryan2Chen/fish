@@ -91,17 +91,23 @@ export class Players extends React.Component<Players.Props, Players.State> {
     const { client } = this.props;
     const { engine } = client;
 
-    if (
-      (engine.ownSeat !== null && engine.ownSeat !== seat) ||
-      (engine.ownSeat === null && engine.userOf[seat] !== null)
-    )
-      return null;
+    if (engine.ownSeat === seat) {
+      return <button onClick={(e) => client.unseatAt()}>stand up</button>;
+    }
 
-    return engine.ownSeat !== null ? (
-      <button onClick={(e) => client.unseatAt()}>stand up</button>
-    ) : (
-      <button onClick={(e) => client.seatAt(seat)}>sit down</button>
-    );
+    if (engine.ownSeat === null) {
+      return engine.userOf[seat] === null ? (
+        <button onClick={(e) => client.seatAt(seat)}>sit down</button>
+      ) : null;
+    }
+
+    // already seated elsewhere: offer to trade seats with this occupied
+    // one (e.g. to rebalance teams before the hand starts)
+    if (engine.phase === C.Phase.WAIT && engine.userOf[seat] !== null) {
+      return <button onClick={(e) => client.swapSeats(seat)}>swap</button>;
+    }
+
+    return null;
   }
 
   // also renders pass and choose buttons

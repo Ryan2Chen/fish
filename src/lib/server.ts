@@ -188,6 +188,16 @@ export class Room {
         if (result instanceof C.Error) return error(result.msg);
         break;
       }
+      case "swapSeats": {
+        // only the host or one of the two seats involved can trigger it --
+        // no random player should be able to shuffle two others around
+        const isHost = user.id === this.engine.host;
+        const isInvolved = seat === event.seatA || seat === event.seatB;
+        if (!isHost && !isInvolved) return error("bad user");
+        result = this.engine.swapSeats(event.seatA, event.seatB);
+        if (result instanceof C.Error) return error(result.msg);
+        break;
+      }
       case "setRules": {
         if (user.id !== event.user) return error("bad user");
         result = this.engine.setRules(event.user, event.rules);
@@ -270,6 +280,11 @@ export class Room {
     switch (event.type) {
       case "seatAt": {
         this.reset(this.findUser(event.user));
+        break;
+      }
+      case "swapSeats": {
+        this.reset(this.findUser(this.engine.userOf[event.seatA]));
+        this.reset(this.findUser(this.engine.userOf[event.seatB]));
         break;
       }
       case "startGame": {

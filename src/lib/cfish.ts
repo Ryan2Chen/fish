@@ -428,6 +428,21 @@ export class Engine extends Data {
     this.userOf[seat] = null;
   }
 
+  // WAIT -> WAIT
+  // lets two seated players trade seats before a hand starts (e.g. to
+  // rebalance who ends up on which team) without the race of a manual
+  // stand-up-then-sit-down leaving either seat briefly grabbable
+  swapSeats(seatA: SeatID, seatB: SeatID): CFish.Result {
+    if (this.phase !== CFish.Phase.WAIT) return new CFish.Error("bad phase");
+    if (seatA === seatB) return new CFish.Error("same seat");
+    if (this.userOf[seatA] === null || this.userOf[seatB] === null)
+      return new CFish.Error("both seats must be occupied");
+
+    const temp = this.userOf[seatA];
+    this.userOf[seatA] = this.userOf[seatB];
+    this.userOf[seatB] = temp;
+  }
+
   removeUser(user: UserID): CFish.Result {
     if (!this.users.includes(user))
       return new CFish.Error("user doesn't exist");

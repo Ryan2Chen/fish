@@ -160,6 +160,24 @@ describe("Engine", () => {
     engine.addUser("g");
     engine.unseatAt(5);
   });
+
+  it("lets two seated players trade seats before the hand starts", () => {
+    engine.swapSeats(0, 2);
+    engine.userOf[0].should.equal("c");
+    engine.userOf[2].should.equal("a");
+
+    engine.swapSeats(0, 0).should.be.instanceOf(CFish.Error); // same seat
+  });
+
+  it("rejects a seat swap involving an empty seat", () => {
+    engine.unseatAt(3);
+    engine.swapSeats(1, 3).should.be.instanceOf(CFish.Error);
+  });
+
+  it("rejects a seat swap once the hand has started", () => {
+    engine.startGame("a", false);
+    engine.swapSeats(0, 4).should.be.instanceOf(CFish.Error);
+  });
 });
 
 describe("Engine declare bonus / choose phase", () => {
