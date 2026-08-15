@@ -542,9 +542,6 @@ export class Engine extends Data {
     const scorer = correct ? team : 1 - team;
 
     this.declarerOf[this.declaredSuit] = scorer as CFish.Team;
-    if (correct) {
-      this.declareBonus[team] = true;
-    }
 
     this.handSize = handSizes;
     if (this.ownHand !== null) {
@@ -554,10 +551,19 @@ export class Engine extends Data {
     if (this.allSuitsDeclared) {
       this.phase = CFish.Phase.WAIT;
       this.settleChips(this.winner);
-    } else if (this.handSize[this.asker] === 0) {
-      this.phase = CFish.Phase.PASS;
+    } else if (correct && this.teamOf(this.asker) === team) {
+      // the declaring team already holds the turn, so there's no future
+      // transfer for the bonus to wait for -- spend it immediately instead
+      // of banking it, or it'd sit unused until the other team happens to
+      // fail an ask back to this team
+      this.chooser = this.declarer;
+      this.phase = CFish.Phase.CHOOSE;
     } else {
-      this.phase = CFish.Phase.ASK;
+      if (correct) {
+        this.declareBonus[team] = true;
+      }
+      this.phase =
+        this.handSize[this.asker] === 0 ? CFish.Phase.PASS : CFish.Phase.ASK;
     }
 
     this.lastResponse = correct ? "good declare" : "bad declare";

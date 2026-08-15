@@ -100,6 +100,13 @@ describe("Engine", () => {
     engine.scoreOf(0).should.equal(0);
     engine.scoreOf(1).should.equal(1);
 
+    // seat 1 (team SECOND) already held the turn when its teammate
+    // declared, so the bonus is spent immediately instead of banked
+    engine.phase.should.equal(CFish.Phase.CHOOSE);
+    engine.chooser.should.equal(3);
+    engine.assignTurn(3, 1); // keep the turn with the same asker
+    engine.asker.should.equal(1);
+
     owners = {};
     engine
       .initDeclare(3, FishSuit.HIGH_CLUBS)
@@ -234,6 +241,37 @@ describe("Engine declare bonus / choose phase", () => {
     // no bank to spend, so the turn transfers normally
     engine.phase.should.equal(CFish.Phase.ASK);
     engine.asker.should.equal(3);
+  });
+
+  it("spends the bonus immediately when the declaring team already has the turn", () => {
+    // flip whose turn it is: now Team FIRST (seat 0) already holds the
+    // turn, and a Team FIRST player declares correctly -- there's no
+    // future "transfer to them" to wait for, so it should go straight to
+    // CHOOSE instead of banking a bonus that would sit unused
+    setHand(0, [C.C_5, C.C_6]);
+    setHand(2, [C.D_2, C.D_3, C.S_3]);
+    setHand(4, [C.D_4, C.D_5, C.S_4, C.D_6, C.D_7, C.S_5]);
+    engine.declarerOf = {} as any;
+
+    engine.initDeclare(0, FishSuit.LOW_DIAMONDS);
+    const owners = {};
+    owners[String(C.D_2)] = 2;
+    owners[String(C.D_3)] = 2;
+    owners[String(C.D_4)] = 4;
+    owners[String(C.D_5)] = 4;
+    owners[String(C.D_6)] = 4;
+    owners[String(C.D_7)] = 4;
+    engine.declare(0, owners).should.equal(true);
+
+    engine.phase.should.equal(CFish.Phase.CHOOSE);
+    engine.chooser.should.equal(0);
+    engine.asker.should.equal(0); // not reassigned yet
+    (engine.declareBonus[CFish.Team.FIRST] === undefined).should.equal(true);
+
+    engine.assignTurn(0, 4);
+    engine.phase.should.equal(CFish.Phase.ASK);
+    engine.asker.should.equal(4);
+    (engine.chooser === null).should.equal(true);
   });
 
   it("rejects assigning the turn to a card-less teammate", () => {
