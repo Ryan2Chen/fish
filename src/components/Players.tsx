@@ -15,6 +15,7 @@ const PlayerInt = (props: {
   cardSelector: (update: () => void) => JSX.Element | null;
   client: Client;
   emoji: string | null;
+  emoteId: number | null;
   isHost: boolean;
   isSelf: boolean;
   name: string;
@@ -31,7 +32,11 @@ const PlayerInt = (props: {
       className={`playerInt ${props.active ? "active" : ""}`}
       ref={setOutRef}
     >
-      {props.emoji ? <div className="emoteBubble">{props.emoji}</div> : null}
+      {props.emoji ? (
+        <div className="emoteBubble" key={props.emoteId}>
+          {props.emoji}
+        </div>
+      ) : null}
       <div className="avatarRow">
         <Avatar id={props.avatarId} />
         {props.isSelf ? <Emote client={props.client} /> : null}
@@ -195,6 +200,7 @@ export class Players extends React.Component<Players.Props, Players.State> {
               cardSelector={(update) => this.renderCardSelector(seat, update)}
               client={client}
               emoji={client.activeEmotes[seat] ?? null}
+              emoteId={client.activeEmoteIds[seat] ?? null}
               isHost={
                 engine.userOf[seat] !== null && engine.userOf[seat] === engine.host
               }

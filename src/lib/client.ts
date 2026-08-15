@@ -22,6 +22,10 @@ export class Client {
   // emoji currently floating over a seat's avatar, cleared after EMOTE_MS
   activeEmotes: Partial<Record<SeatID, string>> = {};
   emoteTimers: Partial<Record<SeatID, ReturnType<typeof setTimeout>>> = {};
+  // bumped on every emote so the UI can force its pop animation to
+  // restart even if the same seat re-emotes before the old one clears
+  activeEmoteIds: Partial<Record<SeatID, number>> = {};
+  private emoteSeq = 0;
 
   cardAnimHook:
     | ((asker: SeatID, askee: SeatID, askedCard: Card) => void)
@@ -159,9 +163,11 @@ export class Client {
       clearTimeout(this.emoteTimers[seat]);
     }
     this.activeEmotes[seat] = emoji;
+    this.activeEmoteIds[seat] = ++this.emoteSeq;
     this.emoteTimers[seat] = setTimeout(() => {
       delete this.emoteTimers[seat];
       delete this.activeEmotes[seat];
+      delete this.activeEmoteIds[seat];
       this.onUpdate?.(this);
     }, EMOTE_MS);
     this.onUpdate?.(this);
