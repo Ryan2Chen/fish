@@ -14,9 +14,43 @@ export namespace Chat {
 }
 
 export class Chat extends React.Component<Chat.Props, Chat.State> {
+  listRef = React.createRef<HTMLUListElement>();
+  // true until the user scrolls away from the bottom on purpose
+  stickToBottom = true;
+  // client.chatLog is mutated in place, so props identity can't tell us
+  // when a message was added -- track the length we last saw ourselves
+  lastChatLength = 0;
+
   constructor(props) {
     super(props);
     this.state = { input: "" };
+  }
+
+  componentDidMount() {
+    this.lastChatLength = this.props.client.chatLog.length;
+    this.scrollToBottom();
+  }
+
+  componentDidUpdate() {
+    const { length } = this.props.client.chatLog;
+    if (length !== this.lastChatLength) {
+      this.lastChatLength = length;
+      this.scrollToBottom();
+    }
+  }
+
+  scrollToBottom(): void {
+    const list = this.listRef.current;
+    if (!list || !this.stickToBottom) return;
+    list.scrollTop = list.scrollHeight;
+  }
+
+  onScroll(): void {
+    const list = this.listRef.current;
+    if (!list) return;
+    const distanceFromBottom =
+      list.scrollHeight - list.scrollTop - list.clientHeight;
+    this.stickToBottom = distanceFromBottom < 20;
   }
 
   submit(e): void {
@@ -36,7 +70,7 @@ export class Chat extends React.Component<Chat.Props, Chat.State> {
 
     return (
       <div className={`chat ${active ? "active" : ""}`}>
-        <ul>
+        <ul onScroll={() => this.onScroll()} ref={this.listRef}>
           {chatLog.map((item, i) => (
             <li key={i}>
               <span className="playerName">{item.user.name}:</span>{" "}
