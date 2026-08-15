@@ -8,6 +8,7 @@ import { CardArea } from "components/CardArea";
 import { Chat } from "components/Chat";
 import { Config } from "components/Config";
 import { Declare } from "components/Declare";
+import { EndScreen } from "components/EndScreen";
 import { Info } from "components/Info";
 import { Log } from "components/Log";
 import { Players } from "components/Players";
@@ -127,7 +128,14 @@ class Room extends React.Component<Room.Props, Room.State> {
     const { client, sidebar } = this.state;
     const { engine } = client;
 
-    if (engine.phase === C.Phase.WAIT) return <Config client={client} />;
+    if (engine.phase === C.Phase.WAIT) {
+      return (
+        <>
+          {engine.winner !== null ? <EndScreen client={client} /> : null}
+          <Config client={client} />
+        </>
+      );
+    }
     if (engine.ownHand !== null) return <CardArea client={client} />;
     return null;
   }

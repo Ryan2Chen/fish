@@ -790,6 +790,77 @@ $rotj: 90;
 
 // subtable
 
+.endScreen {
+  background: var(--gray-0);
+  border-radius: 0.6rem;
+  box-shadow: var(--shadow);
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 1rem;
+  text-align: center;
+
+  .headline {
+    color: var(--accent);
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+
+    &.loss {
+      color: var(--gray-500);
+    }
+  }
+
+  .finalScore {
+    color: var(--gray-600);
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.6rem;
+    margin: 0.2rem 0 0.6rem;
+  }
+
+  .statsTable {
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    margin: 0 auto;
+
+    th,
+    td {
+      padding: 0.15rem 0.5rem;
+      text-align: center;
+    }
+
+    th {
+      color: var(--gray-500);
+      font-weight: 500;
+    }
+
+    .name {
+      align-items: center;
+      display: flex;
+      gap: 0.3rem;
+      text-align: left;
+    }
+
+    tr.self .name {
+      font-weight: 600;
+    }
+
+    .badge {
+      background: var(--accent);
+      border-radius: 0.4rem;
+      color: var(--gray-0);
+      font-size: 0.65rem;
+      padding: 0.05rem 0.3rem;
+
+      &.badge-ace {
+        background: var(--team-first);
+      }
+    }
+  }
+
+  .exportStats {
+    margin-top: 0.5rem;
+  }
+}
+
 .config {
   display: flex;
   flex-direction: row;
