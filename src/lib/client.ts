@@ -209,6 +209,8 @@ export class Client {
 
     this.engine.chips = data.chips;
 
+    this.engine.stats = data.stats;
+
     this.onUpdate?.(this);
   }
 

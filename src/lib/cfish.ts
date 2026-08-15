@@ -45,6 +45,21 @@ export namespace CFish {
     EVERYTHING,
   }
 
+  // one seat's running totals for the current hand
+  export type SeatStats = {
+    cardsWon: number; // successful asks made (cards taken from someone else)
+    cardsLost: number; // times successfully asked (a card taken from them)
+    declaresCorrect: number;
+    declaresIncorrect: number;
+  };
+
+  export const emptySeatStats = (): SeatStats => ({
+    cardsWon: 0,
+    cardsLost: 0,
+    declaresCorrect: 0,
+    declaresIncorrect: 0,
+  });
+
   export type Rules = {
     numPlayers: number;
     bluff: BluffRule;
@@ -131,6 +146,10 @@ export class Data {
     | "good declare"
     | "bad declare"
     | "null" = null;
+
+  // per-seat running totals for the current hand, for the end-of-game
+  // stats screen; cleared on startGame/adminReset like everything else
+  stats: Record<SeatID, CFish.SeatStats> = {} as any;
 }
 
 // client/server agnostic cfish engine
@@ -229,6 +248,36 @@ export class Engine extends Data {
       .length;
   }
 
+  // suits credited to seat's team, regardless of which teammate declared it
+  setsFor(seat: SeatID): number {
+    return this.scoreOf(this.teamOf(seat));
+  }
+
+  // best all-around performer: net cards gained from asking, weighted
+  // heavily toward correct declares (worth more than a single card) and
+  // penalized for incorrect ones (a costly unforced error)
+  get mvpSeat(): SeatID | null {
+    const seated = this.seats.filter((seat) => this.userOf[seat] !== null);
+    if (seated.length === 0) return null;
+
+    const scoreOf = (seat: SeatID) => {
+      const s = this.stats[seat] ?? CFish.emptySeatStats();
+      return s.cardsWon - s.cardsLost + s.declaresCorrect * 3 - s.declaresIncorrect * 2;
+    };
+    return seated.reduce((best, seat) =>
+      scoreOf(seat) > scoreOf(best) ? seat : best
+    );
+  }
+
+  // lighter, just-for-fun award: most cards successfully asked for
+  get aceSeat(): SeatID | null {
+    const seated = this.seats.filter((seat) => this.userOf[seat] !== null);
+    if (seated.length === 0) return null;
+
+    const wonOf = (seat: SeatID) => this.stats[seat]?.cardsWon ?? 0;
+    return seated.reduce((best, seat) => (wonOf(seat) > wonOf(best) ? seat : best));
+  }
+
   // rotated such that user appears first
   rotatedSeats(user: UserID = this.identity): SeatID[] {
     const seat = this.seatOf(user);
@@ -272,6 +321,8 @@ export class Engine extends Data {
     res.pausedUser = this.pausedUser;
 
     res.chips = this.chips;
+
+    res.stats = this.stats;
 
     return res;
   }
@@ -363,6 +414,11 @@ export class Engine extends Data {
     this.declareBonus = {} as any;
     this.chooser = null;
 
+    this.stats = {} as any;
+    for (const seat of this.seats) {
+      this.stats[seat] = CFish.emptySeatStats();
+    }
+
     this.phase = CFish.Phase.ASK;
 
     if (this.identity === null) {
@@ -435,6 +491,8 @@ export class Engine extends Data {
       if (this.handSize[this.askee] !== null) {
         this.handSize[this.askee] -= 1;
       }
+      this.stats[this.asker].cardsWon += 1;
+      this.stats[this.askee].cardsLost += 1;
     }
 
     this.lastResponse = response ? "good ask" : "bad ask";
@@ -554,6 +612,11 @@ export class Engine extends Data {
     const scorer = correct ? team : 1 - team;
 
     this.declarerOf[this.declaredSuit] = scorer as CFish.Team;
+    if (correct) {
+      this.stats[this.declarer].declaresCorrect += 1;
+    } else {
+      this.stats[this.declarer].declaresIncorrect += 1;
+    }
 
     this.handSize = handSizes;
     if (this.ownHand !== null) {
@@ -644,6 +707,7 @@ export class Engine extends Data {
     this.declareBonus = {} as any;
     this.chooser = null;
     this.lastResponse = null;
+    this.stats = {} as any;
   }
 
   // debug

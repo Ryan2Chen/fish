@@ -305,6 +305,113 @@ describe("Engine declare bonus / choose phase", () => {
   });
 });
 
+describe("Engine stats", () => {
+  let engine;
+
+  const setHand = (seat, cards) => {
+    engine.handOf[seat] = new Hand(cards);
+    engine.handSize[seat] = cards.length;
+  };
+
+  beforeEach(() => {
+    engine = new Engine(CFish.defaultRules);
+    ["a", "b", "c", "d", "e", "f"].forEach((user, seat) => {
+      engine.addUser(user);
+      engine.seatAt(user, seat);
+    });
+    engine.startGame("a", false);
+    engine.asker = 0;
+
+    setHand(0, [C.C_2, C.D_2, C.D_3, C.S_3]);
+    setHand(1, [C.C_3]);
+    setHand(2, [C.D_4, C.D_5, C.S_4]);
+    setHand(3, [C.C_4]);
+    setHand(4, [C.D_6, C.D_7, C.S_5]);
+    setHand(5, [C.C_5]);
+  });
+
+  it("starts every seat at zero", () => {
+    engine.seats.forEach((seat) => {
+      engine.stats[seat].should.deep.equal({
+        cardsWon: 0,
+        cardsLost: 0,
+        declaresCorrect: 0,
+        declaresIncorrect: 0,
+      });
+    });
+  });
+
+  it("credits a successful ask to the asker and debits the askee", () => {
+    engine.ask(0, 1, C.C_5); // seat 0 holds low clubs (C_2) but not this card
+    engine.answer(1, false); // seat 1 doesn't have it
+    engine.stats[0].cardsWon.should.equal(0);
+    engine.stats[1].cardsLost.should.equal(0);
+
+    engine.asker = 0;
+    engine.phase = CFish.Phase.ASK;
+    engine.ask(0, 3, C.C_4); // seat 3 (opposing team) does have it
+    engine.answer(3, true);
+    engine.stats[0].cardsWon.should.equal(1);
+    engine.stats[3].cardsLost.should.equal(1);
+  });
+
+  it("credits/debits declare outcomes to the declarer specifically, not the team", () => {
+    engine.initDeclare(2, FishSuit.LOW_DIAMONDS);
+    const owners = {};
+    owners[String(C.D_2)] = 0;
+    owners[String(C.D_3)] = 0;
+    owners[String(C.D_4)] = 2;
+    owners[String(C.D_5)] = 2;
+    owners[String(C.D_6)] = 4;
+    owners[String(C.D_7)] = 4;
+    engine.declare(2, owners).should.equal(true);
+
+    engine.stats[2].declaresCorrect.should.equal(1);
+    engine.stats[0].declaresCorrect.should.equal(0); // teammate, not the declarer
+    engine.stats[4].declaresCorrect.should.equal(0);
+
+    engine.assignTurn(2, 0); // spend the immediate bonus to get back to ASK
+
+    engine.initDeclare(0, FishSuit.LOW_SPADES);
+    const wrongOwners = {};
+    for (const card of genFishSuit(FishSuit.LOW_SPADES)) {
+      wrongOwners[String(card)] = 0; // definitely wrong, no one holds it all
+    }
+    engine.declare(0, wrongOwners).should.equal(false);
+    engine.stats[0].declaresIncorrect.should.equal(1);
+  });
+
+  it("picks the aceSeat and mvpSeat with the best raw/weighted totals", () => {
+    engine.ask(0, 1, C.C_3);
+    engine.answer(1, true);
+
+    engine.asker = 0;
+    engine.phase = CFish.Phase.ASK;
+    engine.ask(0, 3, C.C_4);
+    engine.answer(3, true);
+
+    engine.aceSeat.should.equal(0); // 2 successful asks, more than anyone
+    engine.mvpSeat.should.equal(0);
+  });
+
+  it("clears stats on adminReset and reinitializes them on the next startGame", () => {
+    engine.ask(0, 1, C.C_3);
+    engine.answer(1, true);
+    engine.stats[0].cardsWon.should.equal(1);
+
+    engine.adminReset("a"); // doesn't unseat anyone, just clears hand state
+    Object.keys(engine.stats).length.should.equal(0);
+
+    engine.startGame("a", false);
+    engine.stats[0].should.deep.equal({
+      cardsWon: 0,
+      cardsLost: 0,
+      declaresCorrect: 0,
+      declaresIncorrect: 0,
+    });
+  });
+});
+
 describe("Engine plays past a clinched majority", () => {
   let engine;
 
