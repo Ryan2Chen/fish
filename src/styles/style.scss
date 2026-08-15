@@ -586,7 +586,8 @@ input[type="text"] {
 }
 
 .chatBubble {
-  background: var(--gray-0);
+  --bubble-bg: var(--gray-0);
+  background: var(--bubble-bg);
   border-radius: 0.6rem;
   box-shadow: var(--shadow);
   color: var(--gray-900);
@@ -603,32 +604,34 @@ input[type="text"] {
   z-index: 5;
 
   &.team-0 {
-    background: var(--team-first);
+    --bubble-bg: var(--team-first);
   }
 
   &.team-1 {
-    background: var(--team-second);
+    --bubble-bg: var(--team-second);
   }
 
   // long tail sweeping up toward the avatar -- width is the tail's length,
-  // height is its thickness, background matches whatever the bubble's is.
-  // chatBubbleTailAnchor's position (top) comes from popper's arrow
-  // modifier via inline style, which keeps it correctly attached even as
-  // the bubble's height changes (multi-line wraps) or placement flips near
-  // a table edge. The rotation lives on the nested chatBubbleTail instead
-  // of the anchor itself, because popper's inline style also sets its own
-  // `transform` (a translate) on the anchor, which would otherwise clobber
-  // a CSS rotation on that same element.
+  // height is its thickness. chatBubbleTailAnchor's position (top) comes
+  // from popper's arrow modifier via inline style, which keeps it
+  // correctly attached even as the bubble's height changes (multi-line
+  // wraps) or placement flips near a table edge. The rotation lives on the
+  // nested chatBubbleTail instead of the anchor itself, because popper's
+  // inline style also sets its own `transform` (a translate) on the
+  // anchor, which would otherwise clobber a CSS rotation on that element.
   .chatBubbleTailAnchor {
-    // `inherit` only looks at the direct parent, so this has to explicitly
-    // relay the bubble's actual background down to chatBubbleTail below it
-    background: inherit;
+    // deliberately no background here -- this box is an unclipped
+    // rectangle, so painting it would show as a hard-edged box behind the
+    // triangular chatBubbleTail. It just carries position from popper.
     height: 0.6rem;
     width: 2rem;
   }
 
   .chatBubbleTail {
-    background: inherit;
+    // custom properties cascade through chatBubbleTailAnchor automatically
+    // even though that element has no background of its own, unlike plain
+    // `background: inherit` which only looks at the direct parent
+    background: var(--bubble-bg);
     height: 100%;
     width: 100%;
   }
