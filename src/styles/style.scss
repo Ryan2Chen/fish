@@ -589,9 +589,12 @@ input[type="text"] {
   max-width: 9rem;
   overflow-wrap: break-word;
   padding: 0.3rem 0.5rem;
-  position: absolute;
-  top: 1.4rem; // roughly level with the avatar, not the whole box
-  transform: translateY(-50%);
+  // position/top/left come from the popper instance (anchored to the
+  // avatar icon) via inline style; width must be explicit because an
+  // absolutely positioned popper element has no natural available width
+  // to shrink-to-fit against, which otherwise collapses text to one
+  // word per line
+  width: max-content;
   z-index: 5;
 
   &.team-0 {
@@ -614,26 +617,18 @@ input[type="text"] {
     width: 2rem;
   }
 
-  &.left {
-    right: calc(100% + 0.7rem);
-
-    &::after {
-      clip-path: polygon(0 0, 0 100%, 100% 50%);
-      left: 100%;
-      transform: rotate(23deg);
-      transform-origin: 0 50%;
-    }
+  &.left::after {
+    clip-path: polygon(0 0, 0 100%, 100% 50%);
+    left: 100%;
+    transform: rotate(23deg);
+    transform-origin: 0 50%;
   }
 
-  &.right {
-    left: calc(100% + 0.7rem);
-
-    &::after {
-      clip-path: polygon(100% 0, 100% 100%, 0 50%);
-      right: 100%;
-      transform: rotate(-23deg);
-      transform-origin: 100% 50%;
-    }
+  &.right::after {
+    clip-path: polygon(100% 0, 100% 100%, 0 50%);
+    right: 100%;
+    transform: rotate(-23deg);
+    transform-origin: 100% 50%;
   }
 }
 

@@ -31,6 +31,20 @@ const PlayerInt = (props: {
     placement: "bottom",
   });
 
+  // chat bubble anchors to the avatar icon itself (same idea as Emote's
+  // own popper), not to the box as a whole, so it lines up with the icon
+  // regardless of name length or box height
+  const [avatarRef, setAvatarRef] = useState<HTMLElement>(null);
+  const [chatRef, setChatRef] = useState<HTMLElement>(null);
+  const { styles: chatStyles, attributes: chatAttributes } = usePopper(
+    avatarRef,
+    chatRef,
+    {
+      placement: props.chatBubbleSide === "left" ? "left" : "right",
+      modifiers: [{ name: "offset", options: { offset: [0, 12] } }],
+    }
+  );
+
   return (
     <div
       className={`playerInt ${props.active ? "active" : ""}`}
@@ -45,11 +59,14 @@ const PlayerInt = (props: {
         <div
           className={`chatBubble ${props.chatBubbleSide} team-${props.team}`}
           key={props.chatMessageId}
+          ref={setChatRef}
+          style={chatStyles.popper}
+          {...chatAttributes.popper}
         >
           {props.chatMessage}
         </div>
       ) : null}
-      <div className="avatarRow">
+      <div className="avatarRow" ref={setAvatarRef}>
         <Avatar id={props.avatarId} />
         {props.isSelf ? <Emote client={props.client} /> : null}
       </div>
