@@ -346,6 +346,17 @@ input[type="text"] {
   gap: 0.3rem;
 }
 
+.avatarSelf {
+  background: transparent;
+  height: auto;
+  padding: 0.1rem;
+  vertical-align: middle;
+
+  &:hover {
+    background: var(--gray-200);
+  }
+}
+
 .avatarPicker {
   display: flex;
   flex-wrap: wrap;
