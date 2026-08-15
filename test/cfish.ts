@@ -285,6 +285,24 @@ describe("Engine declare bonus / choose phase", () => {
     engine.assignTurn(3, 5).should.be.instanceOf(CFish.Error);
     engine.phase.should.equal(CFish.Phase.CHOOSE); // still pending
   });
+
+  it("backs out of a misclicked declare without scoring either team", () => {
+    engine.initDeclare(1, FishSuit.LOW_DIAMONDS); // wrong suit, meant HIGH_DIAMONDS
+
+    engine.cancelDeclare(0).should.be.instanceOf(CFish.Error); // wrong declarer
+    engine.phase.should.equal(CFish.Phase.DECLARE); // unaffected by the rejected attempt
+
+    engine.cancelDeclare(1);
+    engine.phase.should.equal(CFish.Phase.ASK);
+    (engine.declarer === null).should.equal(true);
+    (engine.declaredSuit === null).should.equal(true);
+    engine.scoreOf(CFish.Team.FIRST).should.equal(0);
+    engine.scoreOf(CFish.Team.SECOND).should.equal(0);
+    Object.keys(engine.declarerOf).length.should.equal(0);
+
+    // the suit is still open -- a real declare against it still works
+    declareLowDiamonds(1).should.equal(true);
+  });
 });
 
 describe("Engine plays past a clinched majority", () => {

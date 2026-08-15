@@ -150,9 +150,12 @@ export class Declare extends React.Component<Declare.Props, Declare.State> {
           ))}
         </DragDropContext>
         {declaring ? (
-          <button disabled={disabled} onClick={(e) => this.submit()}>
-            submit
-          </button>
+          <div className="declareButtons">
+            <button disabled={disabled} onClick={(e) => this.submit()}>
+              submit
+            </button>
+            <button onClick={(e) => client.cancelDeclare()}>cancel</button>
+          </div>
         ) : null}
       </div>
     );

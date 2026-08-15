@@ -85,6 +85,11 @@ export namespace Protocol {
     owners: Record<string, SeatID>;
   };
 
+  export type CancelDeclare = {
+    type: "cancelDeclare";
+    declarer: SeatID;
+  };
+
   export type DeclareResponse = {
     type: "declareResponse";
     server: null;
@@ -131,6 +136,7 @@ export namespace Protocol {
     | InitDeclare
     | DeclareMove
     | Declare
+    | CancelDeclare
     | DeclareResponse
     | Pass
     | AssignTurn

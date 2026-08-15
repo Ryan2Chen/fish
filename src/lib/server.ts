@@ -228,6 +228,12 @@ export class Room {
         if (result instanceof C.Error) return error(result.msg);
         break;
       }
+      case "cancelDeclare": {
+        if (seat !== event.declarer) return error("bad user");
+        result = this.engine.cancelDeclare(event.declarer);
+        if (result instanceof C.Error) return error(result.msg);
+        break;
+      }
       case "pass": {
         if (seat !== event.passer) return error("bad user");
         result = this.engine.pass(event.passer, event.next);

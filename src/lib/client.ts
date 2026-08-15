@@ -319,6 +319,13 @@ export class Client {
       case "declare":
         this.engine.declare(event.declarer, event.owners);
         break;
+      case "cancelDeclare": {
+        // capture before the mutation -- declarer is null once cancelled
+        const declarerName = sfy("declarer");
+        this.engine.cancelDeclare(event.declarer);
+        this.log.push(`${declarerName} backed out of declaring`);
+        break;
+      }
       case "declareResponse":
         this.engine.declareResponse(
           event.server,
@@ -470,6 +477,13 @@ export class Client {
       type: "declare",
       declarer: this.engine.ownSeat,
       owners: owners,
+    });
+  }
+
+  cancelDeclare(): void {
+    return this.attempt({
+      type: "cancelDeclare",
+      declarer: this.engine.ownSeat,
     });
   }
 

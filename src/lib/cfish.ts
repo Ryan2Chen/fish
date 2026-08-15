@@ -497,6 +497,18 @@ export class Engine extends Data {
     this.phase = CFish.Phase.DECLARE;
   }
 
+  // DECLARE -> ASK / PASS
+  // backs out of a declare in progress (e.g. the wrong suit was picked by
+  // mistake) without it counting as a declaration either way
+  cancelDeclare(declarer: SeatID): CFish.Result {
+    if (this.phase !== CFish.Phase.DECLARE) return new CFish.Error("bad phase");
+    if (this.declarer !== declarer) return new CFish.Error("not declarer");
+
+    this.declarer = null;
+    this.declaredSuit = null;
+    this.phase = this.handSize[this.asker] === 0 ? CFish.Phase.PASS : CFish.Phase.ASK;
+  }
+
   // DECLARE -> ASK / PASS / WAIT
   // owners: Record<card as string, SeatID>
   // server response: correct or not
