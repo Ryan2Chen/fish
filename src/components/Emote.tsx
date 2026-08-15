@@ -10,7 +10,7 @@ export namespace Emote {
   };
 }
 
-export const Emote = (props: Emote.Props) => {
+const EmoteComponent = (props: Emote.Props) => {
   const { client } = props;
   const [open, setOpen] = useState(false);
   const [outRef, setOutRef] = useState<HTMLElement>(null);
@@ -48,3 +48,5 @@ export const Emote = (props: Emote.Props) => {
     </div>
   );
 };
+
+export const Emote = EmoteComponent;
