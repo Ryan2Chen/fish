@@ -620,6 +620,9 @@ input[type="text"] {
   // `transform` (a translate) on the anchor, which would otherwise clobber
   // a CSS rotation on that same element.
   .chatBubbleTailAnchor {
+    // `inherit` only looks at the direct parent, so this has to explicitly
+    // relay the bubble's actual background down to chatBubbleTail below it
+    background: inherit;
     height: 0.6rem;
     width: 2rem;
   }
