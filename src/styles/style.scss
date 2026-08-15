@@ -588,7 +588,11 @@ input[type="text"] {
 .chatBubble {
   --bubble-bg: var(--gray-0);
   background: var(--bubble-bg);
-  border-radius: 0.6rem;
+  // smaller than the usual 0.6rem shared elsewhere: a single-line bubble is
+  // only ~24px tall, and a bigger radius eats so much of its side edges
+  // that there's barely a flat spot left for the tail to attach to without
+  // clipping under the corner curve
+  border-radius: 0.35rem;
   box-shadow: var(--shadow);
   color: var(--gray-900);
   font-size: 0.75rem;
@@ -623,7 +627,9 @@ input[type="text"] {
     // deliberately no background here -- this box is an unclipped
     // rectangle, so painting it would show as a hard-edged box behind the
     // triangular chatBubbleTail. It just carries position from popper.
-    height: 0.6rem;
+    // Thinner than before so it comfortably fits within the bubble's flat
+    // edge (outside the rounded corners) even on a single-line message.
+    height: 0.45rem;
     width: 2rem;
   }
 

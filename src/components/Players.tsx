@@ -56,7 +56,7 @@ const PlayerInt = (props: {
         // padding keeps the arrow's computed offset clear of the bubble's
         // rounded corners -- too close and the corner curve clips into the
         // arrow's flush edge, making it look detached from the bubble
-        { name: "arrow", options: { element: chatArrowRef, padding: 10 } },
+        { name: "arrow", options: { element: chatArrowRef, padding: 6 } },
       ],
     }
   );
