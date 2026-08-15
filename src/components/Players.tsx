@@ -33,17 +33,22 @@ const PlayerInt = (props: {
 
   // chat bubble anchors to the avatar row (same idea as Emote's own
   // popper), not to the box as a whole, so it lines up with the icon
-  // regardless of name length or box height -- except for your own seat,
-  // where it anchors to the emote icon specifically (via this extra wrapper
-  // ref), so the bubble doesn't sit on top of it. The arrow modifier keeps
-  // the tail's attachment point correct even as the bubble's height
-  // changes (multi-line wraps) or its placement flips near an edge -- a
-  // fixed, hand-tuned CSS offset would drift out of sync with the bubble.
+  // regardless of name length or box height -- except for your own seat
+  // placed on the right, where it anchors to the emote icon specifically
+  // (via this extra wrapper ref), so the bubble doesn't sit on top of it.
+  // The emote icon sits to the *right* of the avatar in the row, so this
+  // only matters for right-side placement; on the left, anchoring to the
+  // emote icon would put the bubble too close to (or overlapping) the
+  // avatar instead of clearing it, so the avatar row is used there too.
+  // The arrow modifier keeps the tail's attachment point correct even as
+  // the bubble's height changes (multi-line wraps) or its placement flips
+  // near an edge -- a fixed, hand-tuned CSS offset would drift out of sync.
   const [avatarRef, setAvatarRef] = useState<HTMLElement>(null);
   const [selfEmoteRef, setSelfEmoteRef] = useState<HTMLElement>(null);
   const [chatRef, setChatRef] = useState<HTMLElement>(null);
   const [chatArrowRef, setChatArrowRef] = useState<HTMLElement>(null);
-  const chatAnchorRef = props.isSelf ? selfEmoteRef : avatarRef;
+  const chatAnchorRef =
+    props.isSelf && props.chatBubbleSide === "right" ? selfEmoteRef : avatarRef;
   const { styles: chatStyles, attributes: chatAttributes } = usePopper(
     chatAnchorRef,
     chatRef,
