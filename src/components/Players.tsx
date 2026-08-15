@@ -17,6 +17,7 @@ const PlayerInt = (props: {
   chatMessage: string | null;
   chatMessageId: number | null;
   client: Client;
+  team: C.Team | null;
   emoji: string | null;
   emoteId: number | null;
   isHost: boolean;
@@ -42,7 +43,7 @@ const PlayerInt = (props: {
       ) : null}
       {props.chatMessage ? (
         <div
-          className={`chatBubble ${props.chatBubbleSide}`}
+          className={`chatBubble ${props.chatBubbleSide} team-${props.team}`}
           key={props.chatMessageId}
         >
           {props.chatMessage}
@@ -228,6 +229,7 @@ export class Players extends React.Component<Players.Props, Players.State> {
               isSelf={seat === engine.ownSeat}
               name={this.renderName(seat)}
               seatBtn={this.renderSeatBtn(seat)}
+              team={engine.teamOf(seat)}
             />
           </div>
         ))}

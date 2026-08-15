@@ -584,6 +584,7 @@ input[type="text"] {
   background: var(--gray-0);
   border-radius: 0.6rem;
   box-shadow: var(--shadow);
+  color: var(--gray-900);
   font-size: 0.75rem;
   max-width: 9rem;
   overflow-wrap: break-word;
@@ -593,15 +594,24 @@ input[type="text"] {
   transform: translateY(-50%);
   z-index: 5;
 
-  // long tail, anchored at the bubble's bottom corner, sweeping up toward
-  // the avatar -- width is the tail's length, height is its thickness
+  &.team-0 {
+    background: var(--team-first);
+  }
+
+  &.team-1 {
+    background: var(--team-second);
+  }
+
+  // long tail, anchored at the bubble's bottom corner, sweeping up so its
+  // tip lands level with the avatar -- width is the tail's length, height
+  // is its thickness; background matches whatever the bubble's is
   &::after {
-    background: var(--gray-0);
+    background: inherit;
     bottom: 0.1rem;
     content: "";
     height: 0.6rem;
     position: absolute;
-    width: 1.6rem;
+    width: 2rem;
   }
 
   &.left {
@@ -610,7 +620,7 @@ input[type="text"] {
     &::after {
       clip-path: polygon(0 0, 0 100%, 100% 50%);
       left: 100%;
-      transform: rotate(25deg);
+      transform: rotate(23deg);
       transform-origin: 0 50%;
     }
   }
@@ -621,7 +631,7 @@ input[type="text"] {
     &::after {
       clip-path: polygon(100% 0, 100% 100%, 0 50%);
       right: 100%;
-      transform: rotate(-25deg);
+      transform: rotate(-23deg);
       transform-origin: 100% 50%;
     }
   }
