@@ -612,28 +612,46 @@ input[type="text"] {
 
   // long tail sweeping up toward the avatar -- width is the tail's length,
   // height is its thickness, background matches whatever the bubble's is.
-  // Its vertical offset (top) comes from popper's arrow modifier (inline
-  // style), which keeps it correctly attached even as the bubble's height
-  // changes (multi-line wraps) or placement flips near a table edge; the
-  // rotation is purely decorative on top of that guaranteed-correct anchor.
-  .chatBubbleTail {
-    background: inherit;
+  // chatBubbleTailAnchor's position (top) comes from popper's arrow
+  // modifier via inline style, which keeps it correctly attached even as
+  // the bubble's height changes (multi-line wraps) or placement flips near
+  // a table edge. The rotation lives on the nested chatBubbleTail instead
+  // of the anchor itself, because popper's inline style also sets its own
+  // `transform` (a translate) on the anchor, which would otherwise clobber
+  // a CSS rotation on that same element.
+  .chatBubbleTailAnchor {
     height: 0.6rem;
     width: 2rem;
   }
 
-  &.left .chatBubbleTail {
-    clip-path: polygon(0 0, 0 100%, 100% 50%);
-    left: 100%;
-    transform: rotate(23deg);
-    transform-origin: 0 50%;
+  .chatBubbleTail {
+    background: inherit;
+    height: 100%;
+    width: 100%;
   }
 
-  &.right .chatBubbleTail {
-    clip-path: polygon(100% 0, 100% 100%, 0 50%);
-    right: 100%;
-    transform: rotate(-23deg);
-    transform-origin: 100% 50%;
+  &.left {
+    .chatBubbleTailAnchor {
+      left: 100%;
+    }
+
+    .chatBubbleTail {
+      clip-path: polygon(0 0, 0 100%, 100% 50%);
+      transform: rotate(23deg);
+      transform-origin: 0 50%;
+    }
+  }
+
+  &.right {
+    .chatBubbleTailAnchor {
+      right: 100%;
+    }
+
+    .chatBubbleTail {
+      clip-path: polygon(100% 0, 100% 100%, 0 50%);
+      transform: rotate(-23deg);
+      transform-origin: 100% 50%;
+    }
   }
 }
 

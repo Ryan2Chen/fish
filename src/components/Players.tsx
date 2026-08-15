@@ -52,8 +52,11 @@ const PlayerInt = (props: {
       // skidding (first value) shifts the bubble up along the cross axis,
       // distance (second value) is the horizontal gap from the anchor
       modifiers: [
-        { name: "offset", options: { offset: [-16, 12] } },
-        { name: "arrow", options: { element: chatArrowRef, padding: 4 } },
+        { name: "offset", options: { offset: [-24, 12] } },
+        // padding keeps the arrow's computed offset clear of the bubble's
+        // rounded corners -- too close and the corner curve clips into the
+        // arrow's flush edge, making it look detached from the bubble
+        { name: "arrow", options: { element: chatArrowRef, padding: 10 } },
       ],
     }
   );
@@ -77,11 +80,17 @@ const PlayerInt = (props: {
           {...chatAttributes.popper}
         >
           {props.chatMessage}
+          {/* popper's arrow modifier writes its own inline `transform`
+          (a translate) onto whatever element it's given, which would
+          clobber a CSS rotation on the same element -- so positioning
+          (this ref) and rotation (the child) live on separate elements */}
           <div
-            className="chatBubbleTail"
+            className="chatBubbleTailAnchor"
             ref={setChatArrowRef}
             style={chatStyles.arrow}
-          />
+          >
+            <div className="chatBubbleTail" />
+          </div>
         </div>
       ) : null}
       <div className="avatarRow" ref={setAvatarRef}>
