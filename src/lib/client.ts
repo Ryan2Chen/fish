@@ -211,6 +211,10 @@ export class Client {
 
     this.engine.stats = data.stats;
 
+    this.engine.activeTimerSeat = data.activeTimerSeat;
+    this.engine.activeSince = data.activeSince;
+    this.engine.usedMs = data.usedMs;
+
     this.onUpdate?.(this);
   }
 

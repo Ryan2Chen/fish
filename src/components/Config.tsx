@@ -34,6 +34,49 @@ export class Config extends React.Component<Config.Props> {
     );
   }
 
+  renderTimerOption() {
+    const { client } = this.props;
+    const { engine } = client;
+    const { rules } = engine;
+
+    const setRule = (key, value) => client.setRules({ ...rules, [key]: value });
+
+    return (
+      <div className="option timerOption">
+        <div className="title">team timer</div>
+        {this.renderOption("off", "timerEnabled", false, "no timer")}
+        {this.renderOption(
+          "on",
+          "timerEnabled",
+          true,
+          "each team gets a shared budget, plus a per-ask increment; informational only, doesn't force a pass or a loss"
+        )}
+        {rules.timerEnabled ? (
+          <div className="timerInputs">
+            <label>
+              budget (min)
+              <input
+                type="number"
+                min={1}
+                value={Math.round(rules.timerBudgetMs / 60000)}
+                onChange={(e) => setRule("timerBudgetMs", Number(e.target.value) * 60000)}
+              />
+            </label>
+            <label>
+              +sec / ask
+              <input
+                type="number"
+                min={0}
+                value={Math.round(rules.timerIncrementMs / 1000)}
+                onChange={(e) => setRule("timerIncrementMs", Number(e.target.value) * 1000)}
+              />
+            </label>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
   render() {
     const { client } = this.props;
     const { engine } = client;
@@ -107,6 +150,7 @@ export class Config extends React.Component<Config.Props> {
             "everyone can see the history of every action"
           )}
         </div>
+        {this.renderTimerOption()}
       </div>
     );
   }

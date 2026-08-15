@@ -321,6 +321,22 @@ input[type="text"] {
     color: var(--gray-500);
     font-size: 0.75rem;
   }
+
+  .playerTime {
+    color: var(--gray-500);
+    font-size: 0.75rem;
+  }
+
+  .teamClock {
+    color: var(--team-color, var(--gray-600));
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.1rem;
+    text-align: center;
+
+    &.out {
+      color: var(--accent);
+    }
+  }
 }
 
 .users li {
@@ -823,6 +839,24 @@ $rotj: 90;
       &:hover {
         background: var(--gray-100);
       }
+    }
+  }
+}
+
+.timerOption {
+  .timerInputs {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.4rem;
+
+    label {
+      display: flex;
+      flex-direction: column;
+      font-size: 0.7rem;
+    }
+
+    input {
+      width: 3.5rem;
     }
   }
 }

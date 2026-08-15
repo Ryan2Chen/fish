@@ -337,6 +337,7 @@ describe("Engine stats", () => {
         cardsLost: 0,
         declaresCorrect: 0,
         declaresIncorrect: 0,
+        asksMade: 0,
       });
     });
   });
@@ -408,7 +409,64 @@ describe("Engine stats", () => {
       cardsLost: 0,
       declaresCorrect: 0,
       declaresIncorrect: 0,
+      asksMade: 0,
     });
+  });
+});
+
+describe("Engine timer", () => {
+  let engine;
+
+  const setHand = (seat, cards) => {
+    engine.handOf[seat] = new Hand(cards);
+    engine.handSize[seat] = cards.length;
+  };
+
+  beforeEach(() => {
+    engine = new Engine(CFish.defaultRules);
+    ["a", "b", "c", "d", "e", "f"].forEach((user, seat) => {
+      engine.addUser(user);
+      engine.seatAt(user, seat);
+    });
+    engine.startGame("a", false);
+    engine.asker = 0;
+    setHand(0, [C.C_2, C.D_2]);
+    setHand(1, [C.D_3]); // doesn't hold C_3, so a false answer is valid
+  });
+
+  it("accumulates usedMs for whichever seat's clock was running", () => {
+    const realNow = Date.now;
+    let now = 1_000_000;
+    Date.now = () => now;
+
+    try {
+      engine.activeTimerSeat = 0;
+      engine.activeSince = now; // seat 0's clock has been running since "now"
+
+      now += 4000;
+      engine.ask(0, 1, C.C_3);
+      engine.usedMs[0].should.equal(4000);
+      engine.activeTimerSeat.should.equal(1); // askee is active during ANSWER
+
+      now += 2500;
+      engine.answer(1, false); // bad ask, no bonus banked -- turn passes plainly
+      engine.usedMs[1].should.equal(2500);
+    } finally {
+      Date.now = realNow;
+    }
+  });
+
+  it("computes a team's remaining budget from usedMs and asksMade increments", () => {
+    engine.rules.timerBudgetMs = 10000;
+    engine.rules.timerIncrementMs = 1000;
+    engine.usedMs[0] = 3000;
+    engine.usedMs[2] = 1000;
+    engine.stats[0].asksMade = 2;
+
+    // team FIRST = seats 0, 2, 4
+    engine
+      .remainingMsFor(CFish.Team.FIRST)
+      .should.equal(10000 + 2 * 1000 - (3000 + 1000));
   });
 });
 

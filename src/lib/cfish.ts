@@ -51,6 +51,7 @@ export namespace CFish {
     cardsLost: number; // times successfully asked (a card taken from them)
     declaresCorrect: number;
     declaresIncorrect: number;
+    asksMade: number; // every ask attempted, win or lose (feeds the timer increment)
   };
 
   export const emptySeatStats = (): SeatStats => ({
@@ -58,6 +59,7 @@ export namespace CFish {
     cardsLost: 0,
     declaresCorrect: 0,
     declaresIncorrect: 0,
+    asksMade: 0,
   });
 
   export type Rules = {
@@ -70,6 +72,11 @@ export namespace CFish {
     // margin / FISH_SUITS.length from losers, split across their team
     buyIn: number;
     startingChips: number;
+    // team chess-clock, purely informational -- hitting zero doesn't force
+    // a pass or a loss, it's just a number the UI can show
+    timerEnabled: boolean;
+    timerBudgetMs: number; // starting budget per team
+    timerIncrementMs: number; // credited to a team's budget per ask made
   };
 
   export const defaultRules: Rules = {
@@ -80,6 +87,9 @@ export namespace CFish {
     log: LogRule.LAST_ACTION,
     buyIn: 10,
     startingChips: 100,
+    timerEnabled: false,
+    timerBudgetMs: 10 * 60 * 1000,
+    timerIncrementMs: 3 * 1000,
   };
 
   export class Error {
@@ -150,6 +160,13 @@ export class Data {
   // per-seat running totals for the current hand, for the end-of-game
   // stats screen; cleared on startGame/adminReset like everything else
   stats: Record<SeatID, CFish.SeatStats> = {} as any;
+
+  // chess-clock bookkeeping: which seat's clock is currently running (the
+  // live activeSeat, captured so the next transition knows who to credit),
+  // when it started, and each seat's accumulated decision time so far
+  activeTimerSeat: SeatID | null = null;
+  activeSince: number | null = null;
+  usedMs: Record<SeatID, number> = {} as any;
 }
 
 // client/server agnostic cfish engine
@@ -175,7 +192,7 @@ export class Engine extends Data {
   get activeSeat(): SeatID | null {
     switch (this.phase) {
       case CFish.Phase.WAIT:
-        return this.seatOf[this.host] ?? null;
+        return this.seatOf(this.host) ?? null;
       case CFish.Phase.ASK:
       case CFish.Phase.PASS:
         return this.asker;
@@ -187,6 +204,32 @@ export class Engine extends Data {
         return this.chooser;
     }
     return null;
+  }
+
+  // call after any action that might change activeSeat: credits elapsed
+  // time to whoever's clock was running, then starts the next one
+  private tickTimer(): void {
+    const now = Date.now();
+    if (this.activeTimerSeat !== null && this.activeSince !== null) {
+      this.usedMs[this.activeTimerSeat] =
+        (this.usedMs[this.activeTimerSeat] ?? 0) + (now - this.activeSince);
+    }
+    this.activeTimerSeat = this.activeSeat;
+    this.activeSince = this.activeTimerSeat !== null ? now : null;
+  }
+
+  // a team's remaining chess-clock budget; can go negative once it runs
+  // out -- purely informational, nothing forces a pass or a loss on it
+  remainingMsFor(team: CFish.Team): number {
+    const used = this.playersOf(team).reduce(
+      (sum, seat) => sum + (this.usedMs[seat] ?? 0),
+      0
+    );
+    const asks = this.playersOf(team).reduce(
+      (sum, seat) => sum + (this.stats[seat]?.asksMade ?? 0),
+      0
+    );
+    return this.rules.timerBudgetMs + asks * this.rules.timerIncrementMs - used;
   }
 
   get numSeated(): number {
@@ -324,6 +367,10 @@ export class Engine extends Data {
 
     res.stats = this.stats;
 
+    res.activeTimerSeat = this.activeTimerSeat;
+    res.activeSince = this.activeSince;
+    res.usedMs = this.usedMs;
+
     return res;
   }
 
@@ -419,6 +466,10 @@ export class Engine extends Data {
       this.stats[seat] = CFish.emptySeatStats();
     }
 
+    this.activeTimerSeat = null;
+    this.activeSince = null;
+    this.usedMs = {} as any;
+
     this.phase = CFish.Phase.ASK;
 
     if (this.identity === null) {
@@ -443,6 +494,7 @@ export class Engine extends Data {
       this.handSize[this.ownSeat] = this.ownHand.size;
     }
     this.asker = asker;
+    this.tickTimer();
   }
 
   // ASK -> ANSWER
@@ -466,6 +518,8 @@ export class Engine extends Data {
     this.askee = askee;
     this.askedCard = card;
     this.phase = CFish.Phase.ANSWER;
+    this.stats[asker].asksMade += 1;
+    this.tickTimer();
   }
 
   // ANSWER -> ASK
@@ -510,6 +564,7 @@ export class Engine extends Data {
         this.phase = CFish.Phase.ASK;
       }
     }
+    this.tickTimer();
   }
 
   // CHOOSE -> ASK
@@ -523,6 +578,7 @@ export class Engine extends Data {
     this.asker = next;
     this.chooser = null;
     this.phase = CFish.Phase.ASK;
+    this.tickTimer();
   }
 
   // any phase -> itself, paused
@@ -553,6 +609,7 @@ export class Engine extends Data {
     this.declarer = declarer;
     this.declaredSuit = declaredSuit;
     this.phase = CFish.Phase.DECLARE;
+    this.tickTimer();
   }
 
   // DECLARE -> ASK / PASS
@@ -565,6 +622,7 @@ export class Engine extends Data {
     this.declarer = null;
     this.declaredSuit = null;
     this.phase = this.handSize[this.asker] === 0 ? CFish.Phase.PASS : CFish.Phase.ASK;
+    this.tickTimer();
   }
 
   // DECLARE -> ASK / PASS / WAIT
@@ -642,6 +700,7 @@ export class Engine extends Data {
     }
 
     this.lastResponse = correct ? "good declare" : "bad declare";
+    this.tickTimer();
   }
 
   // winners collectively take buyIn * numPlayers * margin / numSuits chips
@@ -684,6 +743,7 @@ export class Engine extends Data {
 
     this.asker = next;
     this.phase = CFish.Phase.ASK;
+    this.tickTimer();
   }
 
   // any phase -> WAIT
@@ -708,6 +768,10 @@ export class Engine extends Data {
     this.chooser = null;
     this.lastResponse = null;
     this.stats = {} as any;
+
+    this.activeTimerSeat = null;
+    this.activeSince = null;
+    this.usedMs = {} as any;
   }
 
   // debug

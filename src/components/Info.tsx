@@ -7,6 +7,15 @@ import { CFish as C } from "lib/cfish";
 import { Client } from "lib/client";
 import { Protocol as P } from "lib/protocol";
 
+// mm:ss, negative once a team's budget runs out (informational only)
+const formatMs = (ms: number): string => {
+  const sign = ms < 0 ? "-" : "";
+  const abs = Math.abs(Math.round(ms / 1000));
+  const m = Math.floor(abs / 60);
+  const s = abs % 60;
+  return `${sign}${m}:${String(s).padStart(2, "0")}`;
+};
+
 export namespace Info {
   export type Props = {
     active: boolean;
@@ -17,17 +26,53 @@ export namespace Info {
   export type State = {
     nameInput: string;
     renaming: boolean;
+    tick: number;
   };
 }
 
 export class Info extends React.Component<Info.Props, Info.State> {
+  tickTimer: ReturnType<typeof setInterval> | null = null;
+
   constructor(props) {
     super(props);
 
     this.state = {
       nameInput: "",
       renaming: false,
+      tick: 0,
     };
+  }
+
+  componentDidMount() {
+    // re-renders once a second so a running clock visibly counts, without
+    // the server needing to push a network update every tick
+    this.tickTimer = setInterval(() => this.setState({ tick: this.state.tick + 1 }), 1000);
+  }
+
+  componentWillUnmount() {
+    if (this.tickTimer !== null) clearInterval(this.tickTimer);
+  }
+
+  liveUsedMs(seat: number): number {
+    const { engine } = this.props.client;
+    const base = engine.usedMs[seat] ?? 0;
+    if (engine.activeTimerSeat === seat && engine.activeSince !== null) {
+      return base + (Date.now() - engine.activeSince);
+    }
+    return base;
+  }
+
+  liveRemainingMs(team: C.Team): number {
+    const { engine } = this.props.client;
+    const base = engine.remainingMsFor(team);
+    if (
+      engine.activeTimerSeat !== null &&
+      engine.activeSince !== null &&
+      engine.teamOf(engine.activeTimerSeat) === team
+    ) {
+      return base - (Date.now() - engine.activeSince);
+    }
+    return base;
   }
 
   submitRename(e): void {
@@ -82,9 +127,16 @@ export class Info extends React.Component<Info.Props, Info.State> {
     const { client } = this.props;
     const { engine, users } = client;
 
+    const handStarted = engine.seats.some((seat) => engine.stats[seat] !== undefined);
+
     return (
       <div className={`team team-${team}`}>
         <div className="score">{engine.scoreOf(team)}</div>
+        {engine.rules.timerEnabled && handStarted ? (
+          <div className={`teamClock ${this.liveRemainingMs(team) < 0 ? "out" : ""}`}>
+            {formatMs(this.liveRemainingMs(team))}
+          </div>
+        ) : null}
         <p>suits:</p>
         <ul>
           {Card.FISH_SUITS.filter(
@@ -114,6 +166,9 @@ export class Info extends React.Component<Info.Props, Info.State> {
                     {engine.chips[engine.userOf[seat]] ?? engine.rules.startingChips}{" "}
                     chips
                   </span>
+                ) : null}
+                {handStarted ? (
+                  <span className="playerTime">{formatMs(this.liveUsedMs(seat))}</span>
                 ) : null}
               </li>
             ))}
