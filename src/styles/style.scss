@@ -551,6 +551,11 @@ input[type="text"] {
   gap: 0.15rem;
 }
 
+.selfEmoteWrap {
+  align-items: center;
+  display: flex;
+}
+
 @keyframes emotePop {
   0% {
     opacity: 0;
