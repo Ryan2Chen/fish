@@ -333,6 +333,22 @@ export class Server {
       // token, so the rest of the listeners are wired up inside "join"
       client.on("join", (room, name, token) => {
         const id = token as UserID;
+
+        // this token already has a live connection elsewhere (e.g. the SPA
+        // navigated to a new room without a full page reload, or a
+        // duplicate tab). Clean up its OLD room right here, synchronously,
+        // using the room it's actually in -- don't just close the socket
+        // and rely on its own "disconnect" handler firing later, since by
+        // then roomOf[id] below would already point at the room we're
+        // about to join, misattributing the stale connection's disconnect
+        // to the wrong room entirely.
+        const stale = this.clients[id];
+        if (stale !== undefined && stale !== client && stale.connected) {
+          stale.removeAllListeners("disconnect");
+          this.disconnect(id);
+          stale.disconnect(true);
+        }
+
         this.clients[id] = client;
         // an explicit room named after the token lets us address this
         // persistent user directly even after their connection id changes

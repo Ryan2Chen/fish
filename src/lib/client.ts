@@ -51,7 +51,13 @@ export class Client {
     public name: string,
     readonly token: UserID
   ) {
-    this.socket = io(url);
+    // without forceNew, socket.io-client caches and reuses a single
+    // "Manager" per URI -- fine in the common case, but our test suite
+    // creates and tears down many servers on ephemeral ports in quick
+    // succession, and a recycled port could hand a brand new Client a
+    // stale Manager still wired to a server that's already gone. Each
+    // Client here is meant to be an independent connection regardless.
+    this.socket = io(url, { forceNew: true });
 
     this.socket.on("users", (users) => {
       this.users = users;
@@ -300,7 +306,7 @@ export class Client {
           this.log.push(
             response
               ? `${askeeName} gave ${askerName} the ${cardName}`
-              : `${askeeName} did not have the ${cardName}`
+              : `${askeeName} did not have the ${cardName}, asked by ${askerName}`
           );
           if (response) {
             const { asker, askee, askedCard } = this.engine;

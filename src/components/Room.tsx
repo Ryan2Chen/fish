@@ -63,6 +63,14 @@ class Room extends React.Component<Room.Props, Room.State> {
     if (this.state.name !== null) this.startClient(this.state.name);
   }
 
+  componentWillUnmount() {
+    // without this, navigating away within the app (not a full page
+    // reload) leaves this socket connected in the background; the server
+    // only learns it's gone whenever it eventually times out, and by then
+    // it can get misattributed to whatever room this token joins next
+    this.state.client?.socket.disconnect();
+  }
+
   startClient(name: string) {
     const { client: client_, room } = this.state;
     if (client_ !== null) return;
@@ -155,13 +163,15 @@ class Room extends React.Component<Room.Props, Room.State> {
 
   renderSidebar() {
     const { client, sidebar } = this.state;
-    const { engine } = client;
-    const logvis = engine.rules.log !== C.LogRule.LAST_ACTION;
 
     return (
       <>
         <Info active={sidebar === "info"} client={client} lone={false} />
-        {logvis ? <Log active={sidebar === "log"} client={client} /> : null}
+        {/* always visible now -- it used to only render at all once the
+            "log" rule was set away from its default (LAST_ACTION), so the
+            most recent ask was invisible by default unless you happened
+            to know to change that rule */}
+        <Log active={sidebar === "log"} client={client} />
         {/* always visible, not gated behind a toggle -- like a poker
             table's chat, you shouldn't have to open it every time */}
         <Chat active client={client} />
@@ -171,7 +181,7 @@ class Room extends React.Component<Room.Props, Room.State> {
           }`}
         >
           {this.renderToggle("info")}
-          {logvis ? this.renderToggle("log") : null}
+          {this.renderToggle("log")}
         </div>
       </>
     );

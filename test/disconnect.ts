@@ -134,7 +134,12 @@ describe("Mid-game seat takeover", () => {
     client.socket.on("event", handler);
   };
 
-  before((done) => {
+  before(function (done) {
+    // 6 clients connecting/seating/starting is several real socket
+    // round-trips -- can occasionally exceed mocha's default 2000ms hook
+    // timeout under load from the rest of the suite
+    this.timeout(8000);
+
     http = createServer();
     server = new Server(http, DISCONNECT_MS);
     http.listen(() => {
@@ -151,18 +156,25 @@ describe("Mid-game seat takeover", () => {
         }
       };
 
-      let seated = 0;
+      let gameStarted = false;
       ["a", "b", "c", "d", "e", "f"].forEach((name, i) => {
         const client = new Client(url, "midgame" as any, name, `${name}-token` as any);
         client.onUpdate = () => {
           maybeSeatAll();
-          if (client === clients[0]) {
-            const s = clients[0].engine?.seats.filter((s) => clients[0].engine.userOf[s] !== null).length ?? 0;
-            if (s === 6 && seated < 6) {
-              seated = 6;
-              clients[0].attempt({ type: "startGame", user: clients[0].identity.id, shuffle: true });
-            }
-          }
+          if (gameStarted) return;
+          const seatsFilled = clients[0].engine?.seats.filter((s) => clients[0].engine.userOf[s] !== null).length ?? 0;
+          if (seatsFilled !== 6) return;
+
+          // whoever the server actually made host isn't guaranteed to be
+          // clients[0] ("a") -- connection order across separate sockets
+          // isn't guaranteed to match the order we called .connect() in,
+          // so figure out who really holds it and start the game as them
+          const hostToken = clients[0].engine.host;
+          const host = clients.find((c) => c.identity?.id === hostToken);
+          if (host === undefined) return;
+
+          gameStarted = true;
+          host.attempt({ type: "startGame", user: hostToken, shuffle: true });
         };
         clients.push(client);
         client.connect();
@@ -233,7 +245,8 @@ describe("Concurrent disconnects", () => {
     client.socket.on("event", handler);
   };
 
-  before((done) => {
+  before(function (done) {
+    this.timeout(8000); // see the same-shaped hook above for why
     http = createServer();
     server = new Server(http, DISCONNECT_MS);
     http.listen(() => {
@@ -303,5 +316,103 @@ describe("Concurrent disconnects", () => {
     });
 
     clients[1].socket.disconnect();
+  });
+});
+
+// regression test for the "created a new game but it still said I was
+// disconnected" report: navigating to a new room (or a duplicate tab)
+// without a full page reload leaves the OLD socket connected in the
+// background under the same persistent token. If that stale connection's
+// eventual disconnect got attributed to whatever room the token is in BY
+// THEN, it would wrongly pause/haunt the brand-new room instead of the
+// one it actually left.
+describe("Stale connection across rooms", () => {
+  let server, http, url;
+
+  before((done) => {
+    http = createServer();
+    server = new Server(http, 60_000);
+    http.listen(() => {
+      const port = (http.address() as any).port;
+      url = `http://localhost:${port}`;
+      done();
+    });
+  });
+
+  after(() => {
+    server.socket.close();
+    http.close();
+  });
+
+  const onceEventType = (client: Client, type: string, cb: (event: any) => void) => {
+    const handler = (event) => {
+      if (event.type !== type) return;
+      client.socket.off("event", handler);
+      cb(event);
+    };
+    client.socket.on("event", handler);
+  };
+
+  it("attributes the stale connection's disconnect to its old room, not the new one", function (done) {
+    this.timeout(8000);
+
+    // NOTE: `new Client(...)` starts the underlying socket.io connection
+    // immediately (autoConnect), but its "connect" event listener isn't
+    // attached until `.connect()` is called. Always pair construction and
+    // .connect() back to back for each client -- deferring .connect() (as
+    // an earlier version of this test did for `spectator`, inside a later
+    // async callback) risks missing a "connect" that already fired,
+    // leaving that client stuck at status "waiting" forever even though
+    // its socket is actually connected.
+    const staleClient = new Client(url, "roomA" as any, "ryan", "shared-token" as any);
+    staleClient.connect();
+    const spectator = new Client(url, "roomA" as any, "spectator", "spectator-token" as any);
+    spectator.connect();
+
+    staleClient.socket.on("connect", () => {
+      staleClient.attempt({ type: "seatAt", user: "shared-token" as any, seat: 0 });
+    });
+
+    spectator.onUpdate = () => {
+      // wait until the spectator has actually seen the seat land, so the
+      // new connection below isn't racing the seatAt round-trip
+      if (spectator.engine?.userOf[0] !== ("shared-token" as any)) return;
+      spectator.onUpdate = null;
+
+      // join roomB with the SAME token WITHOUT ever disconnecting
+      // staleClient -- exactly what a client-side-only route change (no
+      // unmount cleanup) would do
+      const newClient = new Client(url, "roomB" as any, "ryan", "shared-token" as any);
+      newClient.connect();
+
+      let roomAPaused = false;
+      let roomBReady = false;
+      let finished = false;
+      const maybeFinish = () => {
+        if (finished || !roomAPaused || !roomBReady) return;
+        finished = true;
+        newClient.onUpdate = null;
+
+        spectator.engine.paused.should.equal(true); // roomA correctly notices the departure
+        spectator.engine.pausedUsers.should.deep.equal(["shared-token"]);
+        newClient.engine.paused.should.equal(false); // roomB stays clean
+
+        newClient.socket.disconnect();
+        spectator.socket.disconnect();
+        done();
+      };
+
+      onceEventType(spectator, "pause", (event) => {
+        event.user.should.equal("shared-token");
+        roomAPaused = true;
+        maybeFinish();
+      });
+
+      newClient.onUpdate = () => {
+        if (newClient.engine === null) return;
+        roomBReady = true;
+        maybeFinish();
+      };
+    };
   });
 });

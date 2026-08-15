@@ -1190,6 +1190,12 @@ $rotj: 90;
     display: flex;
     flex-direction: column;
     width: 100vw;
+    // iOS Safari's own bottom URL/tab bar isn't accounted for by the
+    // viewport height, and isn't something safe-area-inset-bottom covers
+    // either (that's just the home-indicator gesture area) -- pad extra
+    // scroll room at the very bottom of the page so the chat input can
+    // actually be scrolled clear of it instead of sitting underneath it
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
   }
 
   .game {
