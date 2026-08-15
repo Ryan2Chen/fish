@@ -13,6 +13,9 @@ const PlayerInt = (props: {
   askBtn: JSX.Element | null;
   avatarId: string;
   cardSelector: (update: () => void) => JSX.Element | null;
+  chatBubbleSide: "left" | "right";
+  chatMessage: string | null;
+  chatMessageId: number | null;
   client: Client;
   emoji: string | null;
   emoteId: number | null;
@@ -35,6 +38,14 @@ const PlayerInt = (props: {
       {props.emoji ? (
         <div className="emoteBubble" key={props.emoteId}>
           {props.emoji}
+        </div>
+      ) : null}
+      {props.chatMessage ? (
+        <div
+          className={`chatBubble ${props.chatBubbleSide}`}
+          key={props.chatMessageId}
+        >
+          {props.chatMessage}
         </div>
       ) : null}
       <div className="avatarRow">
@@ -177,6 +188,13 @@ export class Players extends React.Component<Players.Props, Players.State> {
     ) : null;
   }
 
+  // seats on the left half of the table pop their chat bubble to the
+  // left, so it doesn't overlap the table; everyone else (right side,
+  // plus top/bottom) gets it on the right
+  chatBubbleSide(seat: SeatID): "left" | "right" {
+    return seat === 1 || seat === 2 ? "left" : "right";
+  }
+
   render() {
     const { client } = this.props;
     const { engine, users } = client;
@@ -198,6 +216,9 @@ export class Players extends React.Component<Players.Props, Players.State> {
               askBtn={this.renderAskBtn(seat)}
               avatarId={client.findUser(seat)?.avatar}
               cardSelector={(update) => this.renderCardSelector(seat, update)}
+              chatBubbleSide={this.chatBubbleSide(seat)}
+              chatMessage={client.activeChatBubbles[seat] ?? null}
+              chatMessageId={client.activeChatBubbleIds[seat] ?? null}
               client={client}
               emoji={client.activeEmotes[seat] ?? null}
               emoteId={client.activeEmoteIds[seat] ?? null}

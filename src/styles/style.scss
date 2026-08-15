@@ -580,6 +580,48 @@ input[type="text"] {
   z-index: 5;
 }
 
+@keyframes chatBubblePop {
+  0% {
+    opacity: 0;
+    transform: translateY(-50%) scale(0.5);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(-50%) scale(1.05);
+  }
+  25% {
+    transform: translateY(-50%) scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.chatBubble {
+  animation: chatBubblePop 3s ease forwards;
+  background: var(--gray-0);
+  border-radius: 0.6rem;
+  box-shadow: var(--shadow);
+  font-size: 0.75rem;
+  max-width: 9rem;
+  overflow-wrap: break-word;
+  padding: 0.3rem 0.5rem;
+  position: absolute;
+  top: 50%;
+  z-index: 5;
+
+  &.left {
+    right: calc(100% + 0.5rem);
+  }
+
+  &.right {
+    left: calc(100% + 0.5rem);
+  }
+}
+
 .emotePicker {
   display: inline-flex;
   position: relative;
