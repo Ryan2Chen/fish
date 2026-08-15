@@ -25,7 +25,12 @@ const EmoteComponent = (props: Emote.Props) => {
   const [outRef, setOutRef] = useState<HTMLElement>(null);
   const [inRef, setInRef] = useState<HTMLElement>(null);
   const { styles, attributes } = usePopper(outRef, inRef, {
-    placement: "top",
+    placement: "right-start",
+    // skidding (first value, negative) shifts the popup up along the
+    // right-placement's cross axis, distance (second value) is the
+    // horizontal gap -- together they open it diagonally up-and-right
+    // into open table space instead of overlapping the player's own box
+    modifiers: [{ name: "offset", options: { offset: [-28, 16] } }],
   });
 
   if (client.engine.ownSeat === null) return null;
