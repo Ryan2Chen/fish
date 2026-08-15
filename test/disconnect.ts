@@ -112,3 +112,101 @@ describe("Disconnect / reconnect", () => {
     clients[2].socket.disconnect();
   });
 });
+
+// the wishlist asked to "clarify/test" what happens if someone stands up or
+// disconnects mid-game and whether someone else can take over -- seatAt and
+// unseatAt have no phase restriction, and a vacated seat's hand stays put
+// (it belongs to the seat, not the user), so this should already just work;
+// this locks that behavior in with a real mid-hand scenario
+describe("Mid-game seat takeover", () => {
+  const DISCONNECT_MS = 150;
+  let clients: Client[] = [],
+    server,
+    http,
+    url;
+
+  const onceEventType = (client: Client, type: string, cb: (event: any) => void) => {
+    const handler = (event) => {
+      if (event.type !== type) return;
+      client.socket.off("event", handler);
+      cb(event);
+    };
+    client.socket.on("event", handler);
+  };
+
+  before((done) => {
+    http = createServer();
+    server = new Server(http, DISCONNECT_MS);
+    http.listen(() => {
+      const port = (http.address() as any).port;
+      url = `http://localhost:${port}`;
+
+      let started = false;
+      const maybeSeatAll = () => {
+        if (started) return;
+        if (!clients.every((c) => c.identity !== null)) return;
+        started = true;
+        for (let i = 0; i < 6; i++) {
+          clients[i].attempt({ type: "seatAt", user: clients[i].identity.id, seat: i });
+        }
+      };
+
+      let seated = 0;
+      ["a", "b", "c", "d", "e", "f"].forEach((name, i) => {
+        const client = new Client(url, "midgame" as any, name, `${name}-token` as any);
+        client.onUpdate = () => {
+          maybeSeatAll();
+          if (client === clients[0]) {
+            const s = clients[0].engine?.seats.filter((s) => clients[0].engine.userOf[s] !== null).length ?? 0;
+            if (s === 6 && seated < 6) {
+              seated = 6;
+              clients[0].attempt({ type: "startGame", user: clients[0].identity.id, shuffle: true });
+            }
+          }
+        };
+        clients.push(client);
+        client.connect();
+      });
+
+      onceEventType(clients[0], "startGameResponse", () => done());
+    });
+  });
+
+  after(() => {
+    for (const client of clients) client.socket.disconnect();
+    server.socket.close();
+    http.close();
+  });
+
+  it("frees a disconnected player's seat mid-hand without touching their hand", (done) => {
+    clients[0].engine.phase.should.equal(1); // ASK
+    const handBefore = server.rooms["midgame"].engine.handOf[1].size;
+
+    onceEventType(clients[0], "removeUser", (event) => {
+      event.user.should.equal("b-token");
+      (clients[0].engine.userOf[1] === null).should.equal(true);
+      // the seat's cards are untouched -- only the occupant changed
+      server.rooms["midgame"].engine.handOf[1].size.should.equal(handBefore);
+      done();
+    });
+    clients[1].socket.disconnect();
+  });
+
+  it("lets a new player claim the vacated seat and inherit its hand", (done) => {
+    let claimed = false;
+    const takeover = new Client(url, "midgame" as any, "g", "g-token" as any);
+    takeover.onUpdate = () => {
+      if (!claimed && takeover.identity !== null && takeover.engine?.ownSeat === null) {
+        claimed = true;
+        takeover.attempt({ type: "seatAt", user: takeover.identity.id, seat: 1 });
+      }
+      if (takeover.engine?.ownSeat === 1 && takeover.engine.ownHand !== null) {
+        takeover.engine.ownHand.size.should.be.above(0);
+        takeover.engine.phase.should.equal(1); // still mid-hand, not reset to WAIT
+        takeover.socket.disconnect();
+        done();
+      }
+    };
+    takeover.connect();
+  });
+});
