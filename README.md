@@ -1,19 +1,38 @@
 # cfish
 
-web app for playing the card game [canadian fish, also known as literature](https://www.pagat.com/quartet/literature.html). hosted on http://cfish.herokuapp.com/.
+web app for playing the card game [canadian fish, also known as literature](https://www.pagat.com/quartet/literature.html). hosted on andoverfish.com
 
 ## wishlist
 
-from 8/14 testing:
-
-- add a stopwatch to track time for the whole game (similar to a chess timer, individual + team clocks); support variations — a fixed budget (e.g. 10 min per team + 3 sec per ask) or fully customizable settings chosen before the game starts
-- track time per person
-- victory/loss end screen with stats: time per person, cards taken from others, cards taken from themself, MVP, ace tracking, sets they were part of, sets declared correct vs. wrong
-- keep the turn-indicator arrow visible until the next turn instead of disappearing, so it's easier to remember whose turn it is
-- emoting
-- chatbox
-- betting: final score, most snipes, most stolen-from
-- fix UI bug on declaration (see 8/14 screenshot) — declaration timing isn't landing on the same round; consider more flexibility when declaring (e.g. an undo for a misclick)
-- clarify/test what happens when someone stands up mid-game; allow leaving mid-game with someone else taking over
+From 8/14 testing:
+- add stop watch / track time for the whole game
+- add track time for each person
+- victory/lose end screen with stats: time per person, # card taken from others, # cards taken from themself, MVP, Ace, track sets they were part of, # sets declared correct, # sets declared wrong
+- ui: maintain arrow so it stays until the next turn, easier to remember
+- Emoting
+- Chatbox
+- Betting on final score, person who gets most snipes, person who gets stolen from the most
+- Fix UI Bug on declaration
+<img width="1471" height="801" alt="Screenshot 2026-08-14 at 12 36 20 PM" src="https://github.com/user-attachments/assets/934dea25-f0d0-41ed-a86c-97569569cf07" />
+- Fix declaration timing so that it's on the same round
+- potentially add more flexibility in declaring?
+- Clarify / test what happens when u stand up mid game / allow people to leave mid game and have someone else take over
 - exportable stats from the game
-- soften the disconnect experience: right now the whole game freezes with an "X has disconnected" blocker, which is too disruptive. Keep the cards visible and the game running, and surface disconnects as a chat message instead — closer to how pokernow handles players joining/leaving
+
+- clean up css
+- make action more legible
+- think about overall layout again
+  - score in info panel should be moved
+- color things not gray
+- allow declares to be canceled?
+- show cards to spectators?
+- allow somehow to continue past 5?
+  - add a restart button and don't end the game until all are declared?
+- handle errors other than logging to console
+- rotate seats so self is always at bottom?
+- make logitem nicer
+- use actual card pictures?
+- add audio cues and volume control
+- add settings for number of suits
+- add settings for number of players
+- predict actions client-side
