@@ -1328,14 +1328,19 @@ $rotj: 90;
 
 .suitSelector {
   background-color: var(--gray-200);
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  height: 4rem;
-  padding: 0.25rem;
+  // a plain flex row that wraps put column-count entirely at the mercy of
+  // how much text each suit's label happened to need, so on a narrow (or
+  // even a modest desktop) viewport most of the 9 suits ended up rendered
+  // off past the right edge instead of dropping to a new line -- a fixed
+  // 3-column grid always wraps into exactly 3 rows of 3, so nothing can
+  // run off screen regardless of viewport width
+  display: grid;
+  gap: 0.3rem;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0.4rem 0;
+  max-width: 22rem;
+  padding: 0.4rem;
   position: relative;
-  top: 0.5rem;
-  width: 24rem;
   z-index: 2;
 
   .suitSpan {
@@ -1344,7 +1349,7 @@ $rotj: 90;
 
   button {
     background: var(--gray-0);
-    margin: 0.25rem;
+    width: 100%;
 
     &:hover {
       background: var(--gray-200);
