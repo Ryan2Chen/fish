@@ -21,6 +21,7 @@ namespace DeclareArea {
   export type Props = {
     cards: CardT[];
     disabled: boolean;
+    name: string;
     provided: DroppableProvided;
     seat: SeatID | "unset";
     snapshot: DroppableStateSnapshot;
@@ -29,10 +30,14 @@ namespace DeclareArea {
 
 class DeclareArea extends React.Component<DeclareArea.Props> {
   render() {
-    const { cards, disabled, provided, seat, snapshot } = this.props;
+    const { cards, disabled, name, provided, seat, snapshot } = this.props;
 
     return (
       <div className={`declareArea rot-${seat}`}>
+        {/* the drop zone sits right on top of that seat's own name box in
+        the player circle underneath, hiding it -- label the drop zone
+        itself so whose pile this is stays obvious regardless */}
+        <div className="declareAreaLabel">{name}</div>
         <div
           className="declareInner"
           ref={provided.innerRef}
@@ -141,6 +146,7 @@ export class Declare extends React.Component<Declare.Props, Declare.State> {
                 <DeclareArea
                   cards={this.state.cards[id]}
                   disabled={!declaring}
+                  name={id === "unset" ? "unclaimed" : client.nameOf(id)}
                   provided={provided}
                   seat={id}
                   snapshot={snapshot}

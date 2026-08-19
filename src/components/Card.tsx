@@ -77,6 +77,11 @@ export namespace Card {
   export type Props = {
     card: CardT;
     disabled?: boolean;
+    // true when this card starts a new fish-suit run (relative to
+    // whatever's immediately to its left) -- purely a visual gap so a
+    // sorted (or manually grouped) hand actually reads as grouped, not a
+    // gameplay concern
+    groupStart?: boolean;
     index: number;
   };
 }
@@ -94,7 +99,7 @@ export class Card extends React.Component<Card.Props> {
       >
         {(provided, snapshot) => (
           <div
-            className="cardFrame"
+            className={`cardFrame ${this.props.groupStart ? "groupStart" : ""}`}
             ref={provided.innerRef}
             {...provided.draggableProps}
             {...provided.dragHandleProps}

@@ -621,9 +621,20 @@ export class Engine extends Data {
     this.paused = this.pausedUsers.length > 0;
   }
 
-  // ASK / PASS -> DECLARE
+  // ASK / PASS / CHOOSE -> DECLARE
+  // CHOOSE has to stay declarable too: if a team runs completely out of
+  // cards while choosing who goes next, there's no valid teammate left to
+  // hand the turn to (assignTurn requires a nonzero hand) -- that team is
+  // stuck forever, and unless declaring is still allowed here, so is
+  // everyone else, since the button was hidden for both teams outside
+  // ASK/PASS. The other team (who by then holds every remaining card) can
+  // now declare their way to allSuitsDeclared and end the hand normally.
   initDeclare(declarer: SeatID, declaredSuit: FishSuit): CFish.Result {
-    if (this.phase !== CFish.Phase.ASK && this.phase !== CFish.Phase.PASS)
+    if (
+      this.phase !== CFish.Phase.ASK &&
+      this.phase !== CFish.Phase.PASS &&
+      this.phase !== CFish.Phase.CHOOSE
+    )
       return new CFish.Error("bad phase");
     if (this.declarerOf[declaredSuit] !== undefined)
       return new CFish.Error("suit declared");
@@ -643,7 +654,15 @@ export class Engine extends Data {
 
     this.declarer = null;
     this.declaredSuit = null;
-    this.phase = this.handSize[this.asker] === 0 ? CFish.Phase.PASS : CFish.Phase.ASK;
+    // a pending CHOOSE (this declare could have been started mid-CHOOSE,
+    // see initDeclare) takes priority over guessing PASS/ASK off a stale
+    // asker -- restore it rather than dropping the in-flight choice
+    this.phase =
+      this.chooser !== null
+        ? CFish.Phase.CHOOSE
+        : this.handSize[this.asker] === 0
+        ? CFish.Phase.PASS
+        : CFish.Phase.ASK;
     this.tickTimer();
   }
 
@@ -707,6 +726,19 @@ export class Engine extends Data {
       this.phase = CFish.Phase.WAIT;
       this.settleChips(this.winner);
       this.settleBets();
+    } else if (this.chooser !== null) {
+      // a different team's CHOOSE was already pending before this declare
+      // resolved (declaring is allowed during CHOOSE precisely so a stuck
+      // team doesn't block the other one) -- don't let this declare's own
+      // phase computation silently clobber that in-flight choice. bank the
+      // bonus, if any, for later instead of spending it against a stale
+      // asker; chooser itself is untouched, just re-affirm CHOOSE, since
+      // this method runs while the engine is still sitting in DECLARE and
+      // nothing else would otherwise move it back off of that
+      if (correct) {
+        this.declareBonus[team] = true;
+      }
+      this.phase = CFish.Phase.CHOOSE;
     } else if (correct && this.teamOf(this.asker) === team) {
       // the declaring team already holds the turn, so there's no future
       // transfer for the bonus to wait for -- spend it immediately instead

@@ -303,6 +303,54 @@ describe("Engine declare bonus / choose phase", () => {
     engine.phase.should.equal(CFish.Phase.CHOOSE); // still pending
   });
 
+  it("lets the other team keep declaring when a team is stuck in CHOOSE with nowhere to send the turn", () => {
+    // team SECOND holds *only* their LOW_DIAMONDS cards this time (no
+    // spares) so declaring it away leaves the whole team at zero cards;
+    // team FIRST fully owns LOW_SPADES so they have something to declare
+    setHand(0, [C.C_2, C.S_2, C.S_3]);
+    setHand(1, [C.D_2, C.D_3]);
+    setHand(2, [C.C_3, C.S_4, C.S_5]);
+    setHand(3, [C.D_4, C.D_5]);
+    setHand(4, [C.C_4, C.S_6, C.S_7]);
+    setHand(5, [C.D_6, C.D_7]);
+
+    declareLowDiamonds(1).should.equal(true);
+
+    engine.ask(0, 3, C.C_5);
+    engine.answer(3, false);
+    engine.phase.should.equal(CFish.Phase.CHOOSE);
+    engine.chooser.should.equal(3);
+
+    // the whole team is out of cards -- no valid recipient anywhere,
+    // this is the deadlock a stuck CHOOSE used to leave everyone in
+    engine.handSize[1].should.equal(0);
+    engine.handSize[3].should.equal(0);
+    engine.handSize[5].should.equal(0);
+    engine.assignTurn(3, 1).should.be.instanceOf(CFish.Error);
+    engine.assignTurn(3, 3).should.be.instanceOf(CFish.Error);
+    engine.assignTurn(3, 5).should.be.instanceOf(CFish.Error);
+
+    // team FIRST can still declare their own suit despite the deadlock
+    (engine.initDeclare(0, FishSuit.LOW_SPADES) === undefined).should.equal(
+      true
+    );
+    const owners = {};
+    owners[String(C.S_2)] = 0;
+    owners[String(C.S_3)] = 0;
+    owners[String(C.S_4)] = 2;
+    owners[String(C.S_5)] = 2;
+    owners[String(C.S_6)] = 4;
+    owners[String(C.S_7)] = 4;
+    engine.declare(0, owners).should.equal(true);
+
+    // not every suit is declared yet -- the pending CHOOSE survives this
+    // unrelated declare instead of getting silently recomputed away
+    engine.allSuitsDeclared.should.equal(false);
+    engine.phase.should.equal(CFish.Phase.CHOOSE);
+    engine.chooser.should.equal(3);
+    engine.declareBonus[CFish.Team.FIRST].should.equal(true);
+  });
+
   it("backs out of a misclicked declare without scoring either team", () => {
     engine.initDeclare(1, FishSuit.LOW_DIAMONDS); // wrong suit, meant HIGH_DIAMONDS
 

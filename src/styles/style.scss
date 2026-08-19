@@ -1154,11 +1154,31 @@ $rotj: 90;
   display: flex;
   left: -1rem;
   position: relative;
+
+  .cardFrame.groupStart {
+    margin-left: 0.6rem;
+  }
 }
 
 .declareArea {
   pointer-events: auto;
   position: absolute;
+
+  .declareAreaLabel {
+    background: var(--navy);
+    border-radius: 0.4rem;
+    color: var(--gray-0);
+    font-family: "Baloo 2", sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    left: -50%;
+    padding: 0.1rem 0.5rem;
+    position: relative;
+    text-align: center;
+    top: -1.3rem;
+    white-space: nowrap;
+    width: max-content;
+  }
 
   .declareInner {
     background-color: var(--gray-300);
@@ -1394,6 +1414,23 @@ $rotj: 90;
     margin: 2.5rem 0 -7.5rem;
     transform: scale(0.62);
     transform-origin: top center;
+  }
+
+  // .table's 0.62x shrink makes these two specifically too small to tap
+  // precisely (mis-clicking a neighboring card/button) -- counter-scale
+  // them back toward full size. Safe to do because each is a *child* of
+  // its positioned ancestor rather than the same element: .cardSelector
+  // sits inside popper's own translate-positioned wrapper (a scale here
+  // doesn't fight that inline transform, which lives one element up), and
+  // .declareArea's own rot-N placement is plain left/top percentages, no
+  // transform on that element to collide with.
+  .cardSelector {
+    transform: scale(1.6);
+    transform-origin: top center;
+  }
+
+  .declareArea {
+    transform: scale(1.6);
   }
 
   .config,

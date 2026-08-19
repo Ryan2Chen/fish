@@ -175,7 +175,9 @@ export class Action extends React.Component<Action.Props, Action.State> {
 
     if (
       engine.ownSeat === null ||
-      (engine.phase !== C.Phase.ASK && engine.phase !== C.Phase.PASS)
+      (engine.phase !== C.Phase.ASK &&
+        engine.phase !== C.Phase.PASS &&
+        engine.phase !== C.Phase.CHOOSE)
     )
       return null;
 
