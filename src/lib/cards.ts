@@ -86,19 +86,28 @@ export function fishSuitToColor(fishSuit: FishSuit): string {
   }
 }
 
-// one distinct hue per half-suit (evenly spaced around the wheel), purely so
-// a card's group is identifiable by its border at a glance -- unrelated to
-// fishSuitToColor above, which is about card-suit red/black, not grouping
+// one distinct hue per half-suit, purely so a card's group is identifiable
+// by its border at a glance -- unrelated to fishSuitToColor above, which is
+// about card-suit red/black, not grouping.
+//
+// FISH_SUITS order is also hand order once sorted, so neighboring suits are
+// the ones that actually sit side by side in your hand -- assigning hues in
+// that same sequential order (0deg, 40deg, 80deg, ...) put neighbors only
+// 40deg apart, e.g. green next to blue next to purple, which read as "the
+// same-ish color" at a glance. Stepping around the 9-slot wheel by 4 instead
+// of 1 (4 and 9 share no factors, so this still lands on every slot exactly
+// once) keeps every pair of neighbors a constant 160deg apart -- as far from
+// "adjacent on the wheel" as 9 evenly-spaced hues can get.
 const GROUP_COLORS: Record<FishSuit, string> = {
-  [FishSuit.LOW_CLUBS]: "hsl(0, 60%, 62%)",
-  [FishSuit.HIGH_CLUBS]: "hsl(40, 65%, 55%)",
-  [FishSuit.LOW_DIAMONDS]: "hsl(80, 40%, 45%)",
-  [FishSuit.HIGH_DIAMONDS]: "hsl(120, 40%, 45%)",
-  [FishSuit.LOW_SPADES]: "hsl(165, 50%, 40%)",
-  [FishSuit.HIGH_SPADES]: "hsl(200, 55%, 55%)",
-  [FishSuit.LOW_HEARTS]: "hsl(235, 50%, 68%)",
-  [FishSuit.HIGH_HEARTS]: "hsl(280, 45%, 62%)",
-  [FishSuit.EIGHTS]: "hsl(320, 50%, 62%)",
+  [FishSuit.LOW_CLUBS]: "hsl(0, 55%, 52%)", // red
+  [FishSuit.HIGH_CLUBS]: "hsl(160, 55%, 52%)", // teal
+  [FishSuit.LOW_DIAMONDS]: "hsl(320, 55%, 52%)", // magenta
+  [FishSuit.HIGH_DIAMONDS]: "hsl(120, 55%, 52%)", // green
+  [FishSuit.LOW_SPADES]: "hsl(280, 55%, 52%)", // purple
+  [FishSuit.HIGH_SPADES]: "hsl(80, 55%, 52%)", // yellow-green
+  [FishSuit.LOW_HEARTS]: "hsl(240, 55%, 52%)", // blue
+  [FishSuit.HIGH_HEARTS]: "hsl(40, 55%, 52%)", // orange
+  [FishSuit.EIGHTS]: "hsl(200, 55%, 52%)", // sky blue
 };
 
 export function fishSuitToGroupColor(fishSuit: FishSuit): string {

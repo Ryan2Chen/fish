@@ -10,6 +10,17 @@
 // retro pixel accent font, used sparingly for badges
 @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
 
+// without this, width:100% (or any explicit width) plus padding adds the
+// padding on top of that width instead of eating into it -- .chat and .bet
+// both independently overflowed the viewport by exactly their own padding
+// before this existed; a global reset closes off the whole bug class rather
+// than chasing it component by component
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html {
   font-family: "IBM Plex Sans", sans-serif;
   line-height: 1.2;
@@ -984,8 +995,17 @@ $rotj: 90;
   form {
     align-items: center;
     display: flex;
+    flex-wrap: wrap;
     gap: 0.3rem;
     justify-content: center;
+
+    // the category/pick selects are as wide as their longest option text
+    // ("most stolen from", a player's name, ...) by default -- on a narrow
+    // phone that's already most of the screen for one dropdown, so all four
+    // controls together overflowed instead of wrapping to a second line
+    select {
+      max-width: 45%;
+    }
 
     input {
       width: 3.5rem;
