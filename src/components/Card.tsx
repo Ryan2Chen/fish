@@ -1,7 +1,12 @@
 import React from "react";
 import { Draggable } from "react-beautiful-dnd";
 
-import { Card as CardT, cardSuitToSymbol, rankToSymbol } from "lib/cards";
+import {
+  Card as CardT,
+  cardSuitToSymbol,
+  fishSuitToGroupColor,
+  rankToSymbol,
+} from "lib/cards";
 import { Client } from "lib/client";
 
 export namespace CardSpan {
@@ -105,7 +110,10 @@ export class Card extends React.Component<Card.Props> {
             {...provided.dragHandleProps}
             {...provided.draggableProps.style}
           >
-            <div className="card">
+            <div
+              className="card"
+              style={{ borderColor: fishSuitToGroupColor(card.fishSuit) }}
+            >
               <CardFace card={card} />
             </div>
           </div>

@@ -86,6 +86,25 @@ export function fishSuitToColor(fishSuit: FishSuit): string {
   }
 }
 
+// one distinct hue per half-suit (evenly spaced around the wheel), purely so
+// a card's group is identifiable by its border at a glance -- unrelated to
+// fishSuitToColor above, which is about card-suit red/black, not grouping
+const GROUP_COLORS: Record<FishSuit, string> = {
+  [FishSuit.LOW_CLUBS]: "hsl(0, 60%, 62%)",
+  [FishSuit.HIGH_CLUBS]: "hsl(40, 65%, 55%)",
+  [FishSuit.LOW_DIAMONDS]: "hsl(80, 40%, 45%)",
+  [FishSuit.HIGH_DIAMONDS]: "hsl(120, 40%, 45%)",
+  [FishSuit.LOW_SPADES]: "hsl(165, 50%, 40%)",
+  [FishSuit.HIGH_SPADES]: "hsl(200, 55%, 55%)",
+  [FishSuit.LOW_HEARTS]: "hsl(235, 50%, 68%)",
+  [FishSuit.HIGH_HEARTS]: "hsl(280, 45%, 62%)",
+  [FishSuit.EIGHTS]: "hsl(320, 50%, 62%)",
+};
+
+export function fishSuitToGroupColor(fishSuit: FishSuit): string {
+  return GROUP_COLORS[fishSuit];
+}
+
 export enum Rank {
   R2 = 2,
   R3 = 3,

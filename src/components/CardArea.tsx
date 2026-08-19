@@ -2,7 +2,8 @@ import React from "react";
 import { DragDropContext, Droppable, DropResult } from "react-beautiful-dnd";
 
 import { Card } from "components/Card";
-import { Card as CardT, FishSuit, fishSuitToString } from "lib/cards";
+import { SuitSelector, SuitSpan } from "components/SuitSelector";
+import { Card as CardT, FishSuit } from "lib/cards";
 import { Client } from "lib/client";
 
 export namespace CardArea {
@@ -15,12 +16,14 @@ export namespace CardArea {
     // away in the shelf) -- never touches engine.ownHand, so it's fine for
     // this to reset on reload
     bankedSuits: Set<FishSuit>;
+    selecting: boolean;
   };
 }
 
 export class CardArea extends React.Component<CardArea.Props, CardArea.State> {
   state: CardArea.State = {
     bankedSuits: new Set(),
+    selecting: false,
   };
 
   isBanked = (card: CardT): boolean =>
@@ -53,6 +56,7 @@ export class CardArea extends React.Component<CardArea.Props, CardArea.State> {
   bank(fishSuit: FishSuit) {
     this.setState(({ bankedSuits }) => ({
       bankedSuits: new Set(bankedSuits).add(fishSuit),
+      selecting: false,
     }));
   }
 
@@ -69,8 +73,14 @@ export class CardArea extends React.Component<CardArea.Props, CardArea.State> {
     const { engine } = client;
     if (!engine.ownHand) return null;
 
+    const { selecting } = this.state;
     const allCards = engine.ownHand.cards;
     const activeCards = allCards.filter((card) => !this.isBanked(card));
+
+    const availableSuits = new Set(activeCards.map((card) => card.fishSuit));
+    const bankDisabled = CardT.FISH_SUITS.filter(
+      (suit) => !availableSuits.has(suit)
+    );
 
     const bankedGroups: { fishSuit: FishSuit; count: number }[] = [];
     for (const card of allCards) {
@@ -82,6 +92,22 @@ export class CardArea extends React.Component<CardArea.Props, CardArea.State> {
 
     return (
       <div className="handArea">
+        <div className="handControls">
+          <button
+            onClick={() => this.setState({ selecting: !selecting })}
+            type="button"
+          >
+            {selecting ? "cancel" : "bank a set"}
+          </button>
+        </div>
+        {selecting && (
+          <SuitSelector
+            callback={(suit) => this.bank(suit)}
+            close={() => this.setState({ selecting: false })}
+            disabled={bankDisabled}
+            update={() => {}}
+          />
+        )}
         <DragDropContext onDragEnd={(result) => this.onDragEnd(result)}>
           <Droppable direction="horizontal" droppableId="cardArea">
             {(provided) => (
@@ -95,19 +121,12 @@ export class CardArea extends React.Component<CardArea.Props, CardArea.State> {
                     i > 0 && card.fishSuit !== activeCards[i - 1].fishSuit;
 
                   return (
-                    <div className="cardWrap" key={card.toString()}>
-                      {(i === 0 || groupStart) && (
-                        <button
-                          className="bankGroupBtn"
-                          onClick={() => this.bank(card.fishSuit)}
-                          title={`bank ${fishSuitToString(card.fishSuit)}`}
-                          type="button"
-                        >
-                          bank
-                        </button>
-                      )}
-                      <Card card={card} groupStart={groupStart} index={i} />
-                    </div>
+                    <Card
+                      card={card}
+                      groupStart={groupStart}
+                      index={i}
+                      key={card.toString()}
+                    />
                   );
                 })}
                 {provided.placeholder}
@@ -125,7 +144,7 @@ export class CardArea extends React.Component<CardArea.Props, CardArea.State> {
                 title="tap to bring back"
                 type="button"
               >
-                {fishSuitToString(group.fishSuit)} · {group.count}
+                <SuitSpan suit={group.fishSuit} /> · {group.count}
               </button>
             ))}
           </div>

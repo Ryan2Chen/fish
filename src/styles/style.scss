@@ -1155,29 +1155,13 @@ $rotj: 90;
   left: -1rem;
   position: relative;
 
-  .cardWrap {
-    position: relative;
-  }
-
   .cardFrame.groupStart {
     margin-left: 0.6rem;
   }
+}
 
-  // sits in the same gap the groupStart margin already opens up, so banking
-  // a set doesn't eat into the row's width and make neighboring cards any
-  // harder to tap on mobile
-  .bankGroupBtn {
-    background: var(--gray-200);
-    color: var(--gray-600);
-    font-size: 0.65rem;
-    height: 1.2rem;
-    left: 0;
-    padding: 0 0.35rem;
-    position: absolute;
-    top: -1.1rem;
-    white-space: nowrap;
-    z-index: 2;
-  }
+.handControls {
+  margin-bottom: 0.3rem;
 }
 
 .bankedShelf {
@@ -1248,7 +1232,10 @@ $rotj: 90;
 
   .card {
     background-color: var(--gray-0);
-    border: 1px solid var(--gray-200);
+    // width/style here, color comes in per-card as an inline style so each
+    // half-suit's group color (fishSuitToGroupColor) can override just that
+    // channel
+    border: 2px solid var(--gray-200);
     box-shadow: var(--shadow);
     content: "";
     display: block;
