@@ -1155,8 +1155,42 @@ $rotj: 90;
   left: -1rem;
   position: relative;
 
+  .cardWrap {
+    position: relative;
+  }
+
   .cardFrame.groupStart {
     margin-left: 0.6rem;
+  }
+
+  // sits in the same gap the groupStart margin already opens up, so banking
+  // a set doesn't eat into the row's width and make neighboring cards any
+  // harder to tap on mobile
+  .bankGroupBtn {
+    background: var(--gray-200);
+    color: var(--gray-600);
+    font-size: 0.65rem;
+    height: 1.2rem;
+    left: 0;
+    padding: 0 0.35rem;
+    position: absolute;
+    top: -1.1rem;
+    white-space: nowrap;
+    z-index: 2;
+  }
+}
+
+.bankedShelf {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+
+  .bankedChip {
+    background: var(--gray-200);
+    color: var(--gray-600);
+    font-size: 0.75rem;
+    opacity: 0.85;
   }
 }
 

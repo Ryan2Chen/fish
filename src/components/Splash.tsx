@@ -88,7 +88,7 @@ class Splash extends React.Component<Splash.Props, Splash.State> {
     return (
       <div className="splash">
         <p>
-          <b>cfish</b> ·{" "}
+          <b>Andover Fish</b> ·{" "}
           <a href="https://www.pagat.com/quartet/literature.html">rules</a>
         </p>
         <div className="roomList">
