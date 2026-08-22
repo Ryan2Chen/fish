@@ -8,8 +8,6 @@ Improve mobile experience
 - Ask popup with menu of cards gets blocked -> bring options of cards to ask to front
 - Improve experience of declaring. Prob for mobile make it so instead of dragging, just tap the card then tap the corresponding teammate's box to place.
 
-- fix this UI option configuration: <img width="523" height="169" alt="image" src="https://github.com/user-attachments/assets/ac9d7a63-32cb-4515-bc69-b07d7c30d1ea" />
-
 -----------
 
 From 8/14 testing:
