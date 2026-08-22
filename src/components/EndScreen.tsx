@@ -84,7 +84,9 @@ export class EndScreen extends React.Component<EndScreen.Props> {
         <td>{stats.cardsLost}</td>
         <td>{stats.declaresCorrect}</td>
         <td>{stats.declaresIncorrect}</td>
-        <td>{engine.setsFor(seat)}</td>
+        <td>
+          <span className={`teamDot team-${engine.teamOf(seat)}`} />
+        </td>
         <td>{formatMs(engine.usedMs[seat] ?? 0)}</td>
       </tr>
     );
@@ -123,7 +125,7 @@ export class EndScreen extends React.Component<EndScreen.Props> {
               <th title="cards taken from them">lost</th>
               <th title="declares called correctly">✓ decl.</th>
               <th title="declares called wrong">✗ decl.</th>
-              <th title="suits their team ended up with">sets</th>
+              <th title="which team they're on">team</th>
               <th title="time spent as the active decision-maker">time</th>
             </tr>
           </thead>

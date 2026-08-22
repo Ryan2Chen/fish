@@ -969,6 +969,21 @@ $rotj: 90;
         background: var(--team-first);
       }
     }
+
+    .teamDot {
+      border-radius: 50%;
+      display: inline-block;
+      height: 0.7rem;
+      width: 0.7rem;
+
+      &.team-0 {
+        background: var(--team-first);
+      }
+
+      &.team-1 {
+        background: var(--team-second);
+      }
+    }
   }
 
   .exportStats {
