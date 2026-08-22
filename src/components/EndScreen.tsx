@@ -61,7 +61,7 @@ export class EndScreen extends React.Component<EndScreen.Props> {
     URL.revokeObjectURL(url);
   }
 
-  renderRow(seat: SeatID) {
+  renderRow(seat: SeatID, isFirstOfLosingGroup: boolean) {
     const { client } = this.props;
     const { engine } = client;
     const stats = engine.stats[seat];
@@ -69,8 +69,15 @@ export class EndScreen extends React.Component<EndScreen.Props> {
     if (seat === engine.mvpSeat) badges.push("MVP");
     if (seat === engine.aceSeat && seat !== engine.mvpSeat) badges.push("Ace");
 
+    const classes = [
+      seat === engine.ownSeat ? "self" : "",
+      isFirstOfLosingGroup ? "groupStart" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
     return (
-      <tr key={seat} className={seat === engine.ownSeat ? "self" : ""}>
+      <tr key={seat} className={classes}>
         <td className="name">
           <Avatar id={client.findUser(seat)?.avatar} size={18} />
           {client.nameOf(seat)}
@@ -84,7 +91,9 @@ export class EndScreen extends React.Component<EndScreen.Props> {
         <td>{stats.cardsLost}</td>
         <td>{stats.declaresCorrect}</td>
         <td>{stats.declaresIncorrect}</td>
-        <td>{engine.setsFor(seat)}</td>
+        <td>
+          <span className={`teamDot team-${engine.teamOf(seat)}`} />
+        </td>
         <td>{formatMs(engine.usedMs[seat] ?? 0)}</td>
       </tr>
     );
@@ -95,6 +104,17 @@ export class EndScreen extends React.Component<EndScreen.Props> {
     const { engine } = client;
 
     if (engine.winner === null) return null;
+
+    // winning team's rows grouped on top, losing team's on the bottom;
+    // stable sort keeps each group in its original seat order
+    const orderedSeats = [...engine.seats].sort((a, b) => {
+      const aWon = engine.teamOf(a) === engine.winner ? 0 : 1;
+      const bWon = engine.teamOf(b) === engine.winner ? 0 : 1;
+      return aWon - bWon;
+    });
+    const firstLosingSeat = orderedSeats.find(
+      (seat) => engine.teamOf(seat) !== engine.winner
+    );
 
     const ownTeam = engine.ownSeat !== null ? engine.teamOf(engine.ownSeat) : null;
     const headline =
@@ -123,11 +143,15 @@ export class EndScreen extends React.Component<EndScreen.Props> {
               <th title="cards taken from them">lost</th>
               <th title="declares called correctly">✓ decl.</th>
               <th title="declares called wrong">✗ decl.</th>
-              <th title="suits their team ended up with">sets</th>
+              <th title="which team they're on">team</th>
               <th title="time spent as the active decision-maker">time</th>
             </tr>
           </thead>
-          <tbody>{engine.seats.map((seat) => this.renderRow(seat))}</tbody>
+          <tbody>
+            {orderedSeats.map((seat) =>
+              this.renderRow(seat, seat === firstLosingSeat)
+            )}
+          </tbody>
         </table>
         <button className="exportStats" onClick={() => this.exportStats()}>
           export stats

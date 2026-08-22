@@ -958,6 +958,13 @@ $rotj: 90;
       font-weight: 600;
     }
 
+    // marks the seam between the winning team's rows (grouped on top)
+    // and the losing team's (bottom)
+    tr.groupStart td {
+      border-top: 1px solid var(--gray-200);
+      padding-top: 0.35rem;
+    }
+
     .badge {
       background: var(--accent);
       border-radius: 0.4rem;
@@ -967,6 +974,21 @@ $rotj: 90;
 
       &.badge-ace {
         background: var(--team-first);
+      }
+    }
+
+    .teamDot {
+      border-radius: 50%;
+      display: inline-block;
+      height: 0.7rem;
+      width: 0.7rem;
+
+      &.team-0 {
+        background: var(--team-first);
+      }
+
+      &.team-1 {
+        background: var(--team-second);
       }
     }
   }
