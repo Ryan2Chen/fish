@@ -61,7 +61,7 @@ export class EndScreen extends React.Component<EndScreen.Props> {
     URL.revokeObjectURL(url);
   }
 
-  renderRow(seat: SeatID) {
+  renderRow(seat: SeatID, isFirstOfLosingGroup: boolean) {
     const { client } = this.props;
     const { engine } = client;
     const stats = engine.stats[seat];
@@ -69,8 +69,15 @@ export class EndScreen extends React.Component<EndScreen.Props> {
     if (seat === engine.mvpSeat) badges.push("MVP");
     if (seat === engine.aceSeat && seat !== engine.mvpSeat) badges.push("Ace");
 
+    const classes = [
+      seat === engine.ownSeat ? "self" : "",
+      isFirstOfLosingGroup ? "groupStart" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
     return (
-      <tr key={seat} className={seat === engine.ownSeat ? "self" : ""}>
+      <tr key={seat} className={classes}>
         <td className="name">
           <Avatar id={client.findUser(seat)?.avatar} size={18} />
           {client.nameOf(seat)}
@@ -97,6 +104,17 @@ export class EndScreen extends React.Component<EndScreen.Props> {
     const { engine } = client;
 
     if (engine.winner === null) return null;
+
+    // winning team's rows grouped on top, losing team's on the bottom;
+    // stable sort keeps each group in its original seat order
+    const orderedSeats = [...engine.seats].sort((a, b) => {
+      const aWon = engine.teamOf(a) === engine.winner ? 0 : 1;
+      const bWon = engine.teamOf(b) === engine.winner ? 0 : 1;
+      return aWon - bWon;
+    });
+    const firstLosingSeat = orderedSeats.find(
+      (seat) => engine.teamOf(seat) !== engine.winner
+    );
 
     const ownTeam = engine.ownSeat !== null ? engine.teamOf(engine.ownSeat) : null;
     const headline =
@@ -129,7 +147,11 @@ export class EndScreen extends React.Component<EndScreen.Props> {
               <th title="time spent as the active decision-maker">time</th>
             </tr>
           </thead>
-          <tbody>{engine.seats.map((seat) => this.renderRow(seat))}</tbody>
+          <tbody>
+            {orderedSeats.map((seat) =>
+              this.renderRow(seat, seat === firstLosingSeat)
+            )}
+          </tbody>
         </table>
         <button className="exportStats" onClick={() => this.exportStats()}>
           export stats
