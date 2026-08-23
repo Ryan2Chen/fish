@@ -1288,6 +1288,12 @@ $rotj: 90;
     top: 0;
     left: 0;
   }
+
+  // mobile tap-to-move: this card is "picked up", waiting for a tap on a
+  // destination pile
+  &.selected .card {
+    filter: drop-shadow(0 0 6px var(--accent));
+  }
 }
 
 .cardFace {
