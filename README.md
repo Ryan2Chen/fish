@@ -5,7 +5,6 @@ web app for playing the card game [canadian fish, also known as literature](http
 ## wishlist
 
 Improve mobile experience
-- Ask popup with menu of cards gets blocked -> bring options of cards to ask to front
 - Improve experience of declaring. Prob for mobile make it so instead of dragging, just tap the card then tap the corresponding teammate's box to place.
 
 -----------
