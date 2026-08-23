@@ -4,11 +4,6 @@ web app for playing the card game [canadian fish, also known as literature](http
 
 ## wishlist
 
-Improve mobile experience
-- Improve experience of declaring. Prob for mobile make it so instead of dragging, just tap the card then tap the corresponding teammate's box to place.
-
------------
-
 From 8/14 testing:
 - ui: maintain arrow so it stays until the next turn, easier to remember
 - Betting on final score, person who gets most snipes, person who gets stolen from the most
