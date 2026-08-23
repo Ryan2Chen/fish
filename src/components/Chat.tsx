@@ -24,7 +24,7 @@ export class Chat extends React.Component<Chat.Props, Chat.State> {
   constructor(props) {
     super(props);
     this.state = { input: "" };
-    this.lastSeenLength = props.client.chatLog.length;
+    this.lastChatLength = props.client.chatLog.length;
   }
 
   componentDidMount() {
@@ -36,25 +36,6 @@ export class Chat extends React.Component<Chat.Props, Chat.State> {
     // only autoscroll when a message actually arrived, so it doesn't yank
     // someone back to the bottom while they're scrolled up reading history
     const length = this.props.client.chatLog.length;
-    if (length !== this.lastSeenLength) {
-      this.lastSeenLength = length;
-      this.scrollToBottom();
-    }
-  }
-
-  scrollToBottom(): void {
-    const el = this.listRef.current;
-    if (el === null) return;
-    el.scrollTop = el.scrollHeight;
-  }
-
-  componentDidMount() {
-    this.lastChatLength = this.props.client.chatLog.length;
-    this.scrollToBottom();
-  }
-
-  componentDidUpdate() {
-    const { length } = this.props.client.chatLog;
     if (length !== this.lastChatLength) {
       this.lastChatLength = length;
       this.scrollToBottom();

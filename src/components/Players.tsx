@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { usePopper } from "react-popper";
 
 import { Avatar } from "components/Avatar";
@@ -12,7 +13,7 @@ const PlayerInt = (props: {
   active: boolean;
   askBtn: JSX.Element | null;
   avatarId: string;
-  cardSelector: (update: () => void) => JSX.Element | null;
+  cardSelector: (update: () => void, triggerEl: HTMLElement | null) => JSX.Element | null;
   chatBubbleSide: "left" | "right";
   chatMessage: string | null;
   chatMessageId: number | null;
@@ -118,14 +119,22 @@ const PlayerInt = (props: {
       </span>
       {props.seatBtn}
       {props.askBtn}
-      <div
-        className="popWrap"
-        ref={setInRef}
-        style={styles.popper}
-        {...attributes.popper}
-      >
-        {props.cardSelector(update)}
-      </div>
+      {createPortal(
+        // portaled to document.body for the same reason the emote and
+        // declare pickers are: a stacking context on an ancestor (active-
+        // player glow filter, etc.) can trap z-index and hide this behind
+        // other player boxes otherwise. popper's positioning is unaffected
+        // since it works off live element measurements, not DOM position.
+        <div
+          className="popWrap"
+          ref={setInRef}
+          style={styles.popper}
+          {...attributes.popper}
+        >
+          {props.cardSelector(update, outRef)}
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
@@ -229,7 +238,7 @@ export class Players extends React.Component<Players.Props, Players.State> {
     return <button onClick={(e) => this.setState({ askee })}>{text}</button>;
   }
 
-  renderCardSelector(seat: SeatID, update: () => void) {
+  renderCardSelector(seat: SeatID, update: () => void, triggerEl: HTMLElement | null) {
     const { client } = this.props;
     const { engine } = client;
 
@@ -249,6 +258,7 @@ export class Players extends React.Component<Players.Props, Players.State> {
         close={() => this.setState({ askee: null })}
         disabled={disabled}
         suits={suits}
+        triggerRef={triggerEl}
         update={update}
       />
     ) : null;
@@ -281,7 +291,9 @@ export class Players extends React.Component<Players.Props, Players.State> {
               active={!client.revealingFirstAsker && engine.activeSeat === seat}
               askBtn={this.renderAskBtn(seat)}
               avatarId={client.findUser(seat)?.avatar}
-              cardSelector={(update) => this.renderCardSelector(seat, update)}
+              cardSelector={(update, triggerEl) =>
+                this.renderCardSelector(seat, update, triggerEl)
+              }
               chatBubbleSide={this.chatBubbleSide(seat)}
               chatMessage={client.activeChatBubbles[seat] ?? null}
               chatMessageId={client.activeChatBubbleIds[seat] ?? null}

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { usePopper } from "react-popper";
 
 import { LogItem } from "components/Log";
@@ -22,14 +23,22 @@ const ActionInt = (props: {
     <div className="actionInt" ref={setOutRef}>
       {props.sortBtn}
       {props.declareBtn}
-      <div
-        className="popWrap"
-        ref={setInRef}
-        style={styles.popper}
-        {...attributes.popper}
-      >
-        {props.suitSelector(update)}
-      </div>
+      {createPortal(
+        // portaled to document.body so it can't get trapped behind other
+        // elements by a stacking context an ancestor happens to create
+        // (e.g. filter/transform), the same issue the emote picker had --
+        // popper's positioning math works off live measurements and
+        // doesn't care where in the DOM the popped-up element lives
+        <div
+          className="popWrap"
+          ref={setInRef}
+          style={styles.popper}
+          {...attributes.popper}
+        >
+          {props.suitSelector(update)}
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
