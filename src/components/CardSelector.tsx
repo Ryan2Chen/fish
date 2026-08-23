@@ -3,9 +3,7 @@ import React from "react";
 import { CardSpan } from "components/Card";
 import { SuitSelector } from "components/SuitSelector";
 import { Card, FishSuit, fishSuitToString, genFishSuit } from "lib/cards";
-
-// same breakpoint the stylesheet's mobile layout switches at
-const MOBILE_QUERY = "(max-width: 750px)";
+import { MOBILE_QUERY } from "lib/responsive";
 
 namespace CardSelectorRow {
   export type Props = {
