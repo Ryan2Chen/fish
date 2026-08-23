@@ -1335,6 +1335,22 @@ $rotj: 90;
   width: 18rem;
   padding: 0.25rem;
 
+  &.mobileCardStep {
+    align-items: stretch;
+
+    .backToSets {
+      align-self: flex-start;
+      background: transparent;
+      color: var(--gray-600);
+      margin: 0.2rem 0 0 0.2rem;
+
+      &:hover {
+        background: var(--gray-100);
+        color: var(--gray-900);
+      }
+    }
+  }
+
   .row {
     button {
       background: var(--gray-0);
