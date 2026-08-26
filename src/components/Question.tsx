@@ -1,5 +1,4 @@
 import React from "react";
-import { createPortal } from "react-dom";
 import {
   ArcherContainer,
   ArcherElement,
@@ -38,58 +37,12 @@ export namespace Question {
   export type Props = {
     client: Client;
   };
-
-  export type State = {
-    // real on-screen rect of the (invisible) anchor below, i.e. where
-    // .question would sit if it weren't portaled -- null until measured
-    rect: { height: number; left: number; top: number; width: number } | null;
-  };
 }
 
-export class Question extends React.Component<Question.Props, Question.State> {
-  anchorRef = React.createRef<HTMLDivElement>();
-  observer: ResizeObserver;
-
-  constructor(props) {
-    super(props);
-    this.state = { rect: null };
-  }
-
-  componentDidMount() {
-    this.measure();
-    // .table's mobile layout applies `transform: scale(0.62)` to fit the
-    // desktop-sized rem layout on a phone. react-archer positions its SVG
-    // arrow and label by measuring getBoundingClientRect (post-transform,
-    // real screen pixels) but draws into an SVG whose own coordinate space
-    // is its untransformed layout size -- under any ancestor CSS transform
-    // those two spaces diverge, so the arrow/label land short of the real
-    // target. Portaling the whole overlay to document.body at this anchor's
-    // real screen rect (below) sidesteps the mismatch entirely: nothing in
-    // the portaled subtree is inside a transformed ancestor anymore, so
-    // getBoundingClientRect and layout pixels agree again. Window resize
-    // and .table's own size changes (e.g. rotating a phone) both need a
-    // re-measure, hence the ResizeObserver plus a resize listener.
-    this.observer = new ResizeObserver(() => this.measure());
-    if (this.anchorRef.current) this.observer.observe(this.anchorRef.current);
-    window.addEventListener("resize", this.measure);
-  }
-
-  componentWillUnmount() {
-    this.observer?.disconnect();
-    window.removeEventListener("resize", this.measure);
-  }
-
-  measure = () => {
-    const el = this.anchorRef.current;
-    if (!el) return;
-    const { height, left, top, width } = el.getBoundingClientRect();
-    this.setState({ rect: { height, left, top, width } });
-  };
-
+export class Question extends React.Component<Question.Props> {
   render() {
     const { client } = this.props;
     const { engine, lastAsk } = client;
-    const { rect } = this.state;
 
     const label = lastAsk && (
       <div className="label">
@@ -114,17 +67,8 @@ export class Question extends React.Component<Question.Props, Question.State> {
       return [obj];
     };
 
-    const overlay = rect && (
-      <div
-        className="questionOverlay"
-        style={{
-          height: rect.height,
-          left: rect.left,
-          position: "fixed",
-          top: rect.top,
-          width: rect.width,
-        }}
-      >
+    return (
+      <div className="question">
         <ArcherContainer strokeColor="black">
           {engine.seats.map((seat) => (
             <PlayerTarget
@@ -136,13 +80,6 @@ export class Question extends React.Component<Question.Props, Question.State> {
           ))}
         </ArcherContainer>
       </div>
-    );
-
-    return (
-      <>
-        <div className="question" ref={this.anchorRef} />
-        {createPortal(overlay, document.body)}
-      </>
     );
   }
 }
