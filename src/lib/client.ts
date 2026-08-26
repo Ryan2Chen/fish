@@ -225,7 +225,20 @@ export class Client {
         : null;
     }
     this.engine.handSize = data.handSize;
-    if (this.engine.ownSeat && this.engine.ownHand) {
+    // bug: `this.engine.ownSeat &&` treats seat 0 as falsy (it's a valid
+    // seat number, not a boolean), so this override -- meant to make sure
+    // the reset snapshot doesn't clobber a more current locally-tracked
+    // hand size -- silently skipped itself for whichever player sat in
+    // seat 0. If a "reset" broadcast landed with a stale handSize[0] (e.g.
+    // from an ordinary socket reconnect after a network blip, which always
+    // triggers one server-side) and that player then became the chooser
+    // right after their own correct declare, `handSize[0] !== 0` would
+    // read false even though they still held cards -- blocking them from
+    // choosing themselves specifically, while every teammate (whose
+    // handSize came from the same broadcast, unaffected by this ownSeat
+    // check) remained selectable. Matches the reported bug exactly: only
+    // self-choice breaks, intermittently, only for one specific seat.
+    if (this.engine.ownSeat !== null && this.engine.ownHand) {
       this.engine.handSize[this.engine.ownSeat] = this.engine.ownHand.size;
     }
 
