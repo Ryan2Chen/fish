@@ -727,13 +727,29 @@ input[type="text"] {
   }
 }
 
+// invisible -- exists only so Question.tsx has something to measure
+// (getBoundingClientRect) at .table's real on-screen position/size. the
+// actual arrow overlay is portaled out to .questionOverlay below; see the
+// comment in Question.tsx for why.
 .question {
   height: 70%;
   left: 20%;
   padding: 0;
+  pointer-events: none;
   position: absolute;
   top: 15%;
   width: 60%;
+}
+
+// portaled to document.body, positioned via inline style (fixed, real
+// screen pixels) to exactly overlay .question above -- this keeps
+// react-archer's getBoundingClientRect-based math out from under .table's
+// mobile `transform: scale()`, which it doesn't account for
+.questionOverlay {
+  padding: 0;
+  pointer-events: none;
+  position: fixed;
+  z-index: 5;
 
   > div,
   > div > div {
@@ -744,16 +760,6 @@ input[type="text"] {
 
   .playerTarget {
     position: absolute;
-
-    // .playerTargetInt {
-    //   background: #aaa;
-    //   height: 1em;
-    //   left: -0.5rem;
-    //   position: relative;
-    //   width: 1rem;
-    //   top: -0.5rem;
-    //   z-index: 2;
-    // }
   }
 
   .label {
