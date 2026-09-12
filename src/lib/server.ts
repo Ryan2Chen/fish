@@ -124,11 +124,15 @@ export class Room {
       return;
     }
 
-    // a player with no cards left has nothing left to contribute (can't be
-    // asked, can't ask, can't declare on their own turn) -- don't pause the
-    // whole table waiting for them, just leave them seated as-is so a
-    // reconnect still picks them back up normally
-    if (this.engine.handSize[seat] === 0) return;
+    // a player with no cards left can't be asked, ask, or be assigned a
+    // turn (all gated on handSize elsewhere) -- don't pause the whole table
+    // waiting for them, just leave them seated as-is so a reconnect still
+    // picks them back up normally. Exception: declaring has no hand-size
+    // requirement (anyone can declare at any time), so if they're the
+    // live declarer they can still stall the table -- fall through to the
+    // normal pause/timeout/auto-leave path for that case.
+    if (this.engine.handSize[seat] === 0 && this.engine.declarer !== seat)
+      return;
 
     this.engine.pause(user.id);
     this.event({ type: "pause", user: user.id });
