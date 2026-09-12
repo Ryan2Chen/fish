@@ -434,18 +434,28 @@ input[type="text"] {
 // table
 
 .table {
+  // ambient scale factor for everything sized within .table -- 1 (a no-op)
+  // on desktop; the mobile media query below sets this to a fraction *and*
+  // shrinks .table's own font-size to match, which is what actually
+  // shrinks most descendants (plain `em`, inherited down the cascade).
+  // --table-scale itself is only read directly wherever a descendant
+  // resets its own font-size (.chatBubble, .emoteBubble, .wheelLabel,
+  // .wheelReveal) -- there, `em` would be relative to that reset instead
+  // of to .table, so those use calc(Nrem * var(--table-scale)) instead so
+  // the two scale mechanisms don't compound.
+  --table-scale: 1;
   margin: 4rem 3rem 2rem;
   position: relative;
 }
 
 .players {
   background-color: var(--felt);
-  border: 0.4rem solid var(--gray-0);
+  border: 0.4em solid var(--gray-0);
   border-radius: 50%;
   box-shadow: var(--shadow);
-  height: 20rem;
+  height: 20em;
   position: relative;
-  width: 23rem;
+  width: 23em;
 }
 
 .player {
@@ -483,37 +493,37 @@ input[type="text"] {
 
 @keyframes shake {
   30% {
-    transform: translateX(-1rem);
+    transform: translateX(-1em);
   }
 
   60% {
-    transform: translateX(1rem);
+    transform: translateX(1em);
   }
 
   80% {
-    transform: translateX(-0.5rem);
+    transform: translateX(-0.5em);
   }
 
   90% {
-    transform: translateX(0.3rem);
+    transform: translateX(0.3em);
   }
 
   100% {
-    transform: translateX(0rem);
+    transform: translateX(0em);
   }
 }
 
 .playerInt {
   align-items: center;
   background: var(--gray-0);
-  border: 0.15rem solid var(--team-color, transparent);
+  border: 0.15em solid var(--team-color, transparent);
   display: flex;
   flex-direction: column;
-  left: -4.5rem;
-  padding: 0.4rem;
+  left: -4.5em;
+  padding: 0.4em;
   position: absolute;
-  top: -2rem;
-  width: 8rem;
+  top: -2em;
+  width: 8em;
 
   .avatar {
     flex-shrink: 0;
@@ -538,7 +548,7 @@ input[type="text"] {
 @keyframes emotePop {
   0% {
     opacity: 0;
-    transform: translate(-50%, 0.3rem) scale(0.5);
+    transform: translate(-50%, calc(0.3rem * var(--table-scale))) scale(0.5);
   }
   15% {
     opacity: 1;
@@ -555,12 +565,16 @@ input[type="text"] {
   }
 }
 
+// font-size is a local reset (not inherited from .table), so its own other
+// lengths use calc(var(--table-scale)) rather than em -- em here would be
+// relative to *this* element's own (already-scaled) font-size and double
+// -apply the table's shrink factor
 .emoteBubble {
   animation: emotePop 2.5s ease forwards;
-  font-size: 1.6rem;
+  font-size: calc(1.6rem * var(--table-scale));
   left: 50%;
   position: absolute;
-  top: -1.6rem;
+  top: calc(-1.6rem * var(--table-scale));
   z-index: 5;
 }
 
@@ -571,13 +585,15 @@ input[type="text"] {
   // only ~24px tall, and a bigger radius eats so much of its side edges
   // that there's barely a flat spot left for the tail to attach to without
   // clipping under the corner curve
-  border-radius: 0.35rem;
+  border-radius: calc(0.35rem * var(--table-scale));
   box-shadow: var(--shadow);
   color: var(--gray-900);
-  font-size: 0.75rem;
-  max-width: 9rem;
+  // local font-size reset -- see .emoteBubble comment above for why its
+  // siblings below use calc(var(--table-scale)) instead of em
+  font-size: calc(0.75rem * var(--table-scale));
+  max-width: calc(9rem * var(--table-scale));
   overflow-wrap: break-word;
-  padding: 0.3rem 0.5rem;
+  padding: calc(0.3rem * var(--table-scale)) calc(0.5rem * var(--table-scale));
   // position/top/left come from the popper instance (anchored to the
   // avatar icon) via inline style; width must be explicit because an
   // absolutely positioned popper element has no natural available width
@@ -612,8 +628,8 @@ input[type="text"] {
     // between the bubble and the avatar, the tip overshot past the whole
     // avatar and landed on the emote icon next to it instead -- this
     // length is calibrated to land within the avatar itself.
-    height: 0.45rem;
-    width: 1rem;
+    height: calc(0.45rem * var(--table-scale));
+    width: calc(1rem * var(--table-scale));
   }
 
   .chatBubbleTail {
@@ -634,7 +650,7 @@ input[type="text"] {
       // is a local overlap relative to the bubble's own edge, unlike the
       // popper offset distance, which moves the bubble+tail together as
       // one rigid unit and can't change their relative geometry at all.
-      left: calc(100% - 4px);
+      left: calc(100% - 4px * var(--table-scale));
     }
 
     .chatBubbleTail {
@@ -646,7 +662,7 @@ input[type="text"] {
 
   &.right {
     .chatBubbleTailAnchor {
-      right: calc(100% - 4px);
+      right: calc(100% - 4px * var(--table-scale));
     }
 
     .chatBubbleTail {
@@ -667,7 +683,7 @@ input[type="text"] {
     color: var(--gray-600);
     display: flex;
     height: auto;
-    padding: 0.1rem;
+    padding: 0.1em;
 
     &:hover {
       background: var(--gray-200);
@@ -706,11 +722,11 @@ input[type="text"] {
 
   .declareButtons {
     display: flex;
-    gap: 0.4rem;
-    left: calc(50% - 3rem);
+    gap: 0.4em;
+    left: calc(50% - 3em);
     pointer-events: auto;
     position: absolute;
-    top: calc(50% + 6rem);
+    top: calc(50% + 6em);
   }
 
   button {
@@ -727,29 +743,13 @@ input[type="text"] {
   }
 }
 
-// invisible -- exists only so Question.tsx has something to measure
-// (getBoundingClientRect) at .table's real on-screen position/size. the
-// actual arrow overlay is portaled out to .questionOverlay below; see the
-// comment in Question.tsx for why.
 .question {
   height: 70%;
   left: 20%;
   padding: 0;
-  pointer-events: none;
   position: absolute;
   top: 15%;
   width: 60%;
-}
-
-// portaled to document.body, positioned via inline style (fixed, real
-// screen pixels) to exactly overlay .question above -- this keeps
-// react-archer's getBoundingClientRect-based math out from under .table's
-// mobile `transform: scale()`, which it doesn't account for
-.questionOverlay {
-  padding: 0;
-  pointer-events: none;
-  position: fixed;
-  z-index: 5;
 
   > div,
   > div > div {
@@ -764,7 +764,7 @@ input[type="text"] {
 
   .label {
     background: var(--gray-100);
-    padding: 0.1rem;
+    padding: 0.1em;
   }
 }
 
@@ -805,29 +805,29 @@ $rotj: 90;
 }
 
 .spinWheel {
-  height: 10rem;
+  height: 10em;
   left: 50%;
   pointer-events: none;
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 10rem;
+  width: 10em;
   z-index: 6;
 }
 
 .wheelPointer {
-  border-left: 0.6rem solid transparent;
-  border-right: 0.6rem solid transparent;
-  border-top: 0.9rem solid var(--navy);
+  border-left: 0.6em solid transparent;
+  border-right: 0.6em solid transparent;
+  border-top: 0.9em solid var(--navy);
   left: 50%;
   position: absolute;
-  top: -0.4rem;
+  top: -0.4em;
   transition: transform 0.15s ease;
   transform: translateX(-50%);
   z-index: 1;
 
   .landed & {
-    transform: translateX(-50%) translateY(0.15rem);
+    transform: translateX(-50%) translateY(0.15em);
   }
 }
 
@@ -861,22 +861,24 @@ $rotj: 90;
 .wheelLabel {
   fill: var(--gray-0);
   font-family: "Baloo 2", sans-serif;
-  font-size: 9px;
+  font-size: calc(9px * var(--table-scale));
   font-weight: 700;
   text-anchor: middle;
 }
 
+// font-size is a local reset, so its other lengths use
+// calc(var(--table-scale)) rather than em -- see .emoteBubble's comment
 .wheelReveal {
   animation: pulse 0.6s ease-in-out infinite;
   background: var(--accent);
-  border-radius: 0.6rem;
-  bottom: -2.4rem;
+  border-radius: calc(0.6rem * var(--table-scale));
+  bottom: calc(-2.4rem * var(--table-scale));
   color: var(--gray-0);
   font-family: "Baloo 2", sans-serif;
-  font-size: 0.85rem;
+  font-size: calc(0.85rem * var(--table-scale));
   font-weight: 700;
   left: 50%;
-  padding: 0.3rem 0.6rem;
+  padding: calc(0.3rem * var(--table-scale)) calc(0.6rem * var(--table-scale));
   position: absolute;
   transform: translateX(-50%);
   white-space: nowrap;
@@ -900,7 +902,7 @@ $rotj: 90;
   .cardSpan {
     display: block;
     background: var(--gray-0);
-    padding: 0.3rem;
+    padding: 0.3em;
     border: 1px solid var(--gray-200);
     box-shadow: var(--shadow);
     left: -50%;
@@ -1227,21 +1229,29 @@ $rotj: 90;
 }
 
 .declareArea {
+  // stays full (desktop-equivalent) size regardless of .table's mobile
+  // shrink -- these need to stay easy to tap/read, so this cancels the
+  // inherited --table-scale back out to 100% (a no-op on desktop, where
+  // --table-scale is 1). Everything below can then just use em like the
+  // rest of .table's subtree: em is always relative to *this* element's
+  // own (now-cancelled-back-to-100%) font-size, so it renders at its
+  // original desktop-equivalent size without any further scale math.
+  font-size: calc(100% / var(--table-scale));
   pointer-events: auto;
   position: absolute;
 
   .declareAreaLabel {
     background: var(--navy);
-    border-radius: 0.4rem;
+    border-radius: 0.4em;
     color: var(--gray-0);
     font-family: "Baloo 2", sans-serif;
-    font-size: 0.7rem;
+    font-size: 0.7em;
     font-weight: 700;
     left: -50%;
-    padding: 0.1rem 0.5rem;
+    padding: 0.1em 0.5em;
     position: relative;
     text-align: center;
-    top: -1.3rem;
+    top: -1.3em;
     white-space: nowrap;
     width: max-content;
   }
@@ -1249,11 +1259,11 @@ $rotj: 90;
   .declareInner {
     background-color: var(--gray-300);
     display: flex;
-    height: 5rem;
+    height: 5em;
     position: relative;
-    padding: 0.3rem 2.5rem 0.1rem 0.3rem;
+    padding: 0.3em 2.5em 0.1em 0.3em;
     left: -50%;
-    min-width: 1.5rem;
+    min-width: 1.5em;
   }
 
   &.rot-unset {
@@ -1262,11 +1272,11 @@ $rotj: 90;
   }
 
   .cardFrame {
-    height: 4rem;
-    width: 1.5rem;
+    height: 4em;
+    width: 1.5em;
 
     .card {
-      width: 3rem;
+      width: 3em;
     }
   }
 }
@@ -1501,32 +1511,38 @@ $rotj: 90;
   }
 
   // the table's absolute-positioned seats are sized for desktop and would
-  // overflow a phone's width; scale the whole thing down uniformly rather
-  // than rework the rem-based rotation math. transform doesn't shrink the
-  // layout box it reserves, so pull the next element up to close the gap.
-  // the top margin also clears the "show info"/"show chat" toggle buttons
-  // pinned to the top-left corner.
+  // overflow a phone's width; shrink the whole thing down uniformly rather
+  // than rework the rot-N rotation math (that's already responsive: plain
+  // %, unaffected either way). This sets --table-scale *and* .table's own
+  // font-size together -- the font-size shrink is what actually resizes
+  // every `em`-sized descendant (a real layout change, inherited down the
+  // cascade), while --table-scale is only consulted directly by the few
+  // descendants that reset their own font-size (see the comment on .table
+  // above). Deliberately NOT a `transform: scale()`: that only rescales
+  // paint, not layout, so anything that measures the DOM (react-archer's
+  // arrow, react-popper's chat bubbles, click hit-testing) gets numbers
+  // that disagree with what's on screen -- see git history on Question.tsx
+  // for a bug this caused. font-size is a genuine layout change, so
+  // getBoundingClientRect and friends stay consistent with what's painted.
+  // No margin compensation needed either, unlike transform: a real
+  // shrink actually reduces the box .table reserves.
   .table {
-    margin: 2.5rem 0 -7.5rem;
-    transform: scale(0.62);
-    transform-origin: top center;
+    --table-scale: 0.62;
+    font-size: 62%;
+    margin: 2.5rem 0 1rem;
   }
 
-  // .table's 0.62x shrink makes these two specifically too small to tap
-  // precisely (mis-clicking a neighboring card/button) -- counter-scale
-  // them back toward full size. Safe to do because each is a *child* of
-  // its positioned ancestor rather than the same element: .cardSelector
-  // sits inside popper's own translate-positioned wrapper (a scale here
-  // doesn't fight that inline transform, which lives one element up), and
-  // .declareArea's own rot-N placement is plain left/top percentages, no
-  // transform on that element to collide with.
+  // .table's shrink makes these two specifically too small to tap
+  // precisely (mis-clicking a neighboring card/button) -- scale them back
+  // toward full size. .cardSelector is portaled to document.body (see
+  // Players.tsx), so it was never inside .table's shrink to begin with;
+  // this bumps it *past* that baseline for extra-easy tapping. .declareArea
+  // cancels .table's font-size shrink back to 100% via the same
+  // --table-scale variable (see its base rule) rather than a transform, so
+  // it stays layout-consistent too.
   .cardSelector {
     transform: scale(1.6);
     transform-origin: top center;
-  }
-
-  .declareArea {
-    transform: scale(1.6);
   }
 
   .config,
