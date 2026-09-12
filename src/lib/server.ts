@@ -124,6 +124,12 @@ export class Room {
       return;
     }
 
+    // a player with no cards left has nothing left to contribute (can't be
+    // asked, can't ask, can't declare on their own turn) -- don't pause the
+    // whole table waiting for them, just leave them seated as-is so a
+    // reconnect still picks them back up normally
+    if (this.engine.handSize[seat] === 0) return;
+
     this.engine.pause(user.id);
     this.event({ type: "pause", user: user.id });
 
